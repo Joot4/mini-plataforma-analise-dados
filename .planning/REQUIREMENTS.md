@@ -143,57 +143,57 @@ Mapa de qual fase cobre qual requisito. Populado durante a criação do roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | TBD | Pending |
-| AUTH-02 | TBD | Pending |
-| AUTH-03 | TBD | Pending |
-| AUTH-04 | TBD | Pending |
-| AUTH-05 | TBD | Pending |
-| AUTH-06 | TBD | Pending |
-| INGEST-01 | TBD | Pending |
-| INGEST-02 | TBD | Pending |
-| INGEST-03 | TBD | Pending |
-| INGEST-04 | TBD | Pending |
-| INGEST-05 | TBD | Pending |
-| INGEST-06 | TBD | Pending |
-| INGEST-07 | TBD | Pending |
-| INGEST-08 | TBD | Pending |
-| INGEST-09 | TBD | Pending |
-| CLEAN-01 | TBD | Pending |
-| CLEAN-02 | TBD | Pending |
-| CLEAN-03 | TBD | Pending |
-| CLEAN-04 | TBD | Pending |
-| SUM-01 | TBD | Pending |
-| SUM-02 | TBD | Pending |
-| SUM-03 | TBD | Pending |
-| NLQ-01 | TBD | Pending |
-| NLQ-02 | TBD | Pending |
-| NLQ-03 | TBD | Pending |
-| NLQ-04 | TBD | Pending |
-| NLQ-05 | TBD | Pending |
-| NLQ-06 | TBD | Pending |
-| NLQ-07 | TBD | Pending |
-| NLQ-08 | TBD | Pending |
-| NLQ-09 | TBD | Pending |
-| NLQ-10 | TBD | Pending |
-| SQL-01 | TBD | Pending |
-| SQL-02 | TBD | Pending |
-| SQL-03 | TBD | Pending |
-| SQL-04 | TBD | Pending |
-| SQL-05 | TBD | Pending |
-| OPS-01 | TBD | Pending |
-| OPS-02 | TBD | Pending |
-| OPS-03 | TBD | Pending |
-| OPS-04 | TBD | Pending |
-| OPS-05 | TBD | Pending |
-| OPS-06 | TBD | Pending |
-| PERF-01 | TBD | Pending |
-| PERF-02 | TBD | Pending |
+| AUTH-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Pending |
+| AUTH-04 | Phase 1 | Pending |
+| AUTH-05 | Phase 3 | Pending |
+| AUTH-06 | Phase 3 | Pending |
+| INGEST-01 | Phase 2 | Pending |
+| INGEST-02 | Phase 2 | Pending |
+| INGEST-03 | Phase 2 | Pending |
+| INGEST-04 | Phase 2 | Pending |
+| INGEST-05 | Phase 2 | Pending |
+| INGEST-06 | Phase 2 | Pending |
+| INGEST-07 | Phase 2 | Pending |
+| INGEST-08 | Phase 2 | Pending |
+| INGEST-09 | Phase 2 | Pending |
+| CLEAN-01 | Phase 2 | Pending |
+| CLEAN-02 | Phase 2 | Pending |
+| CLEAN-03 | Phase 2 | Pending |
+| CLEAN-04 | Phase 2 | Pending |
+| SUM-01 | Phase 4 | Pending |
+| SUM-02 | Phase 4 | Pending |
+| SUM-03 | Phase 4 | Pending |
+| NLQ-01 | Phase 5 | Pending |
+| NLQ-02 | Phase 5 | Pending |
+| NLQ-03 | Phase 5 | Pending |
+| NLQ-04 | Phase 5 | Pending |
+| NLQ-05 | Phase 5 | Pending |
+| NLQ-06 | Phase 5 | Pending |
+| NLQ-07 | Phase 5 | Pending |
+| NLQ-08 | Phase 5 | Pending |
+| NLQ-09 | Phase 5 | Pending |
+| NLQ-10 | Phase 5 | Pending |
+| SQL-01 | Phase 3 | Pending |
+| SQL-02 | Phase 3 | Pending |
+| SQL-03 | Phase 3 | Pending |
+| SQL-04 | Phase 3 | Pending |
+| SQL-05 | Phase 3 | Pending |
+| OPS-01 | Phase 2 | Pending |
+| OPS-02 | Phase 2 | Pending |
+| OPS-03 | Phase 4 | Pending |
+| OPS-04 | Phase 1 | Pending |
+| OPS-05 | Phase 1 | Pending |
+| OPS-06 | Phase 1 | Pending |
+| PERF-01 | Phase 6 | Pending |
+| PERF-02 | Phase 6 | Pending |
 
 **Coverage:**
-- v1 requirements: 44 total
-- Mapped to phases: 0 (será preenchido pelo roadmapper)
-- Unmapped: 44 ⚠️
+- v1 requirements: 45 total
+- Mapped to phases: 45 ✓
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-04-24*
-*Last updated: 2026-04-24 after initial definition*
+*Last updated: 2026-04-24 after roadmap creation*
