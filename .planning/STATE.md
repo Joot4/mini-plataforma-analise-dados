@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: phase_5_shipped
-stopped_at: Phase 5 — NL Query pipeline shipped, 108/108 tests green
-last_updated: "2026-04-25T03:10:00Z"
-last_activity: 2026-04-25 — Phase 5 (NL Query) shipped. End-to-end pipeline classify → gen_sql → validate → exec → narrate → chart: classifier (on/off-topic via LLM structured output), SQL generator with 1-retry on AST validator failure then invalid_question, execution via session DuckDB conn (off-loop with asyncio.to_thread), result truncated at 1000 rows with flag, narrator (1-3 frases PT-BR), chart heuristic (datetime+num → line; cat+num → bar; 2 num → point; else null) via Altair to_dict normalized to inline data.values + string mark. POST /api/v1/sessions/{id}/query live. 108 tests green.
+status: milestone_v1_complete
+stopped_at: All 6 phases shipped — 116 fast tests + 2 SLA tests all green
+last_updated: "2026-04-25T03:30:00Z"
+last_activity: 2026-04-25 — Phase 6 (Hardening + Perf) shipped. PERF-01 (80k-line PT-BR CSV end-to-end) and PERF-02 (NLQ pipeline) validated against SLAs via pytest -m slow. Error boundary audit (7 tests) verifies no raw traceback / OpenAI / DuckDB error strings leak into HTTP response bodies — every error returns a PT-BR envelope. Slow tests registered in pyproject.toml (default: not slow). Conftest ASGITransport raise_app_exceptions=False so generic 500 handler is exercised. v1 MILESTONE COMPLETE.
 progress:
   total_phases: 6
-  completed_phases: 5
-  total_plans: 12
-  completed_plans: 12
+  completed_phases: 6
+  total_plans: 13
+  completed_plans: 13
   percent: 100
 verification:
   phase_1:
@@ -35,6 +35,10 @@ verification:
     status: shipped
     tests_green: 108/108
     coverage_map: "SC#1 happy path with text/table/sql — test_happy_path_returns_table_and_chart (integration) + test_happy_path_returns_full_response (orchestrator); SC#2 off-topic rejected — test_off_topic_question_returns_400 + test_off_topic_raises_out_of_scope; SC#3 chart shapes — test_categorical_plus_numeric_gives_bar / test_two_numerics_gives_point / test_truncation_at_1000_rows (truncated=true + 1000 rows exactly). Also: retry-once path (test_invalid_sql_retries_once_then_fails + test_invalid_first_attempt_retry_succeeds), cross-user 404, 422 empty question, 503 when OPENAI_API_KEY missing"
+  phase_6:
+    status: shipped
+    tests_green: "116 fast + 2 slow"
+    coverage_map: "SC#1 PERF-01 (80k-line PT-BR CSV ≤30s) — test_80k_ptbr_csv_under_30s (marker slow); SC#2 PERF-02 (NLQ pipeline ≤10s with LLMs mocked) — test_nlq_pipeline_under_10s (marker slow); SC#3 no raw traceback/OpenAI/DuckDB strings leaking — 8 envelope tests in test_error_boundaries.py covering 401/409/422/415/execution_failed/invalid_question/500-internal/404 with both error_type + message_PT-BR present and forbidden-needle scan clean"
 ---
 
 # Project State

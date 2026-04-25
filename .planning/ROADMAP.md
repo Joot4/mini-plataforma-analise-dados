@@ -13,11 +13,11 @@ Six phases build the system layer by layer, each independently testable. Phase 1
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Project skeleton, Docker infra, auth (register/login/JWT), SQLite migrations, task registry baseline (3/3 plans done; verification pending)
-- [ ] **Phase 2: Ingestion & PT-BR Locale** - Upload endpoint + polling, CSV/XLSX/TSV parsing with full PT-BR locale handling, cleaning pipeline with report
-- [ ] **Phase 3: DuckDB Session & Security** - Per-session isolated DuckDB connections, two-layer SQL security hardening, session TTL sweeper
-- [ ] **Phase 4: Structured Summary** - Per-column stats via DuckDB, PT-BR LLM narration, structured logging for every LLM call
-- [ ] **Phase 5: NL Query** - Full text-to-SQL pipeline: classify → generate SQL → validate → execute → narrate → chart spec
-- [ ] **Phase 6: Hardening & Performance** - Error boundaries, performance SLA validation (80k rows ≤30s, NL Q&A ≤10s), integration tests
+- [x] **Phase 2: Ingestion & PT-BR Locale** - Upload endpoint + polling, CSV/XLSX/TSV parsing with full PT-BR locale handling, cleaning pipeline with report
+- [x] **Phase 3: DuckDB Session & Security** - Per-session isolated DuckDB connections, two-layer SQL security hardening, session TTL sweeper
+- [x] **Phase 4: Structured Summary** - Per-column stats via DuckDB, PT-BR LLM narration, structured logging for every LLM call
+- [x] **Phase 5: NL Query** - Full text-to-SQL pipeline: classify → generate SQL → validate → execute → narrate → chart spec
+- [x] **Phase 6: Hardening & Performance** - Error boundaries, performance SLA validation (80k rows ≤30s, NL Q&A ≤10s), integration tests
 
 ## Phase Details
 

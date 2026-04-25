@@ -85,8 +85,8 @@ Requisitos para a entrega inicial. Cada um mapeia para uma fase do roadmap.
 
 ### Performance
 
-- [ ] **PERF-01**: Arquivo CSV PT-BR de 80k linhas: limpeza + resumo em ≤30s (cenário "v1 pronto")
-- [ ] **PERF-02**: Pergunta NL sobre dataset carregado: resposta em ≤10s (inclui chamadas ao LLM)
+- [x] **PERF-01**: Arquivo CSV PT-BR de 80k linhas: limpeza + resumo em ≤30s (cenário "v1 pronto")
+- [x] **PERF-02**: Pergunta NL sobre dataset carregado: resposta em ≤10s (inclui chamadas ao LLM)
 
 ## v2 Requirements
 
@@ -189,8 +189,8 @@ Mapa de qual fase cobre qual requisito. Populado durante a criação do roadmap.
 | OPS-04 | Phase 1 | Done (01-01) |
 | OPS-05 | Phase 1 | Done (01-01 image scaffold + 01-03 alembic stack) |
 | OPS-06 | Phase 1 | Done (01-01 + 01-03 alembic upgrade head wired) |
-| PERF-01 | Phase 6 | Pending |
-| PERF-02 | Phase 6 | Pending |
+| PERF-01 | Phase 6 | Done (06-shipped) |
+| PERF-02 | Phase 6 | Done (06-shipped) |
 
 **Coverage:**
 - v1 requirements: 45 total
