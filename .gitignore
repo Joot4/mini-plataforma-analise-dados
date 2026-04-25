@@ -28,3 +28,4 @@ data/uploads/*
 .idea/
 *.swp
 .DS_Store
+.claude/

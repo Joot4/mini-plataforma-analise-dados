@@ -183,8 +183,10 @@ else:
                 "summary",
                 "upload_result",
                 "last_query",
+                "messages",
+                "_mirrored_session",
             ):
-                st.session_state[k] = None
+                st.session_state.pop(k, None)
             st.rerun()
 
     result = st.session_state.upload_result or {}
@@ -259,61 +261,133 @@ else:
 
     st.divider()
 
-    # --- NLQ query UI ---
-    st.header("2. Pergunta em linguagem natural")
-    question = st.text_input(
-        "Digite sua pergunta sobre os dados",
-        placeholder="Ex: Qual o total de vendas por região?",
-        key="question_input",
-    )
-    send_col, hint_col = st.columns([1, 4])
-    with send_col:
-        send = st.button(
-            "Enviar pergunta", type="primary", disabled=not question.strip()
-        )
-    with hint_col:
-        st.caption(
-            "💡 Dica: mencione colunas pelo nome original da planilha."
-        )
-
-    if send and question.strip():
-        with st.spinner("Analisando (classificando → gerando SQL → executando)..."):
+    # --- Multi-turn chat UI ---
+    # `messages` is a local mirror of the server-side conversation history.
+    # We prime it from the session's GET payload on first render so a page
+    # reload doesn't lose the visible history.
+    if "messages" not in st.session_state or st.session_state.get("_mirrored_session") != st.session_state.session_id:
+        st.session_state.messages = []
+        st.session_state._mirrored_session = st.session_state.session_id
+        try:
             with api() as c:
-                r = c.post(
-                    f"/sessions/{st.session_state.session_id}/query",
-                    json={"question": question},
+                sr = c.get(
+                    f"/sessions/{st.session_state.session_id}",
                     headers=auth_headers(),
                 )
-        if r.status_code == 200:
-            st.session_state.last_query = r.json()
-        else:
-            body = r.json()
-            st.error(
-                f"**{body.get('error_type', 'error')}** — "
-                f"{body.get('message', 'Falha na consulta.')}"
-            )
+            if sr.status_code == 200:
+                for t in sr.json().get("history", []):
+                    st.session_state.messages.append(
+                        {"role": "user", "content": t["question"]}
+                    )
+                    st.session_state.messages.append(
+                        {
+                            "role": "assistant",
+                            "content": t["text"],
+                            "sql": t["sql"],
+                            "row_count": t["row_count"],
+                            "truncated": t.get("truncated", False),
+                        }
+                    )
+        except Exception:
+            pass
 
-    # --- Last query render ---
+    hdr_col, reset_col = st.columns([4, 1])
+    with hdr_col:
+        st.header("2. Conversa sobre os dados")
+    with reset_col:
+        if st.session_state.messages and st.button(
+            "🧹 Limpar conversa", use_container_width=True
+        ):
+            with api() as c:
+                c.delete(
+                    f"/sessions/{st.session_state.session_id}/conversation",
+                    headers=auth_headers(),
+                )
+            st.session_state.messages = []
+            st.session_state.last_query = None
+            st.rerun()
+
+    st.caption(
+        "💡 Follow-ups funcionam: depois de \"total de vendas?\", pergunte \"e por região?\"."
+    )
+
+    # Render history.
+    for msg in st.session_state.messages:
+        with st.chat_message(msg["role"]):
+            st.write(msg["content"])
+            if msg["role"] == "assistant" and msg.get("sql"):
+                meta = f"**{msg.get('row_count', '?')} linhas**"
+                if msg.get("truncated"):
+                    meta += " (truncado em 1000)"
+                st.caption(meta)
+                with st.expander("SQL"):
+                    st.code(msg["sql"], language="sql")
+
+    # Render the most-recent turn's table + chart (if any) separately so the user
+    # gets a bigger view than inside the chat bubble. Older turns show only SQL.
     lq = st.session_state.last_query
     if lq:
-        st.subheader("💬 Resposta")
-        st.write(lq["text"])
+        with st.expander(f"📊 Resultado da última pergunta", expanded=True):
+            tab_table, tab_chart, tab_sql = st.tabs(["Tabela", "Gráfico", "SQL"])
+            with tab_table:
+                table = lq["table"]
+                df = pd.DataFrame(table["rows"], columns=table["columns"])
+                if table.get("truncated"):
+                    st.caption(f"⚠️ Resultado truncado em {len(df)} linhas.")
+                st.dataframe(df, use_container_width=True, hide_index=True)
+                st.download_button(
+                    "⬇️ Baixar CSV",
+                    df.to_csv(index=False).encode("utf-8"),
+                    "resultado.csv",
+                    "text/csv",
+                )
+            with tab_chart:
+                if lq.get("chart_spec"):
+                    st.vega_lite_chart(lq["chart_spec"], use_container_width=True)
+                else:
+                    st.info("Este resultado não tem formato adequado para gráfico.")
+            with tab_sql:
+                st.code(lq["generated_sql"], language="sql")
+                if lq.get("reasoning"):
+                    st.caption(f"Raciocínio do modelo: {lq['reasoning']}")
 
-        tab_table, tab_chart, tab_sql = st.tabs(["Tabela", "Gráfico", "SQL"])
-        with tab_table:
-            table = lq["table"]
-            df = pd.DataFrame(table["rows"], columns=table["columns"])
-            if table.get("truncated"):
-                st.caption(f"⚠️ Resultado truncado em {len(df)} linhas.")
-            st.dataframe(df, use_container_width=True, hide_index=True)
-
-        with tab_chart:
-            if lq.get("chart_spec"):
-                st.vega_lite_chart(lq["chart_spec"], use_container_width=True)
+    # Chat input — Streamlit pins it to the bottom of the page.
+    question = st.chat_input("Pergunte algo sobre os dados...")
+    if question:
+        # Render the user message immediately, then call the API, then re-render.
+        st.session_state.messages.append({"role": "user", "content": question})
+        with st.chat_message("user"):
+            st.write(question)
+        with st.chat_message("assistant"):
+            with st.spinner(
+                "Analisando (classificando → gerando SQL → executando → narrando)..."
+            ):
+                with api() as c:
+                    r = c.post(
+                        f"/sessions/{st.session_state.session_id}/query",
+                        json={"question": question},
+                        headers=auth_headers(),
+                    )
+            if r.status_code == 200:
+                body = r.json()
+                st.session_state.last_query = body
+                st.session_state.messages.append(
+                    {
+                        "role": "assistant",
+                        "content": body["text"],
+                        "sql": body["generated_sql"],
+                        "row_count": len(body["table"]["rows"]),
+                        "truncated": body["table"].get("truncated", False),
+                    }
+                )
+                st.rerun()
             else:
-                st.info("Este resultado não tem formato adequado para gráfico.")
-
-        with tab_sql:
-            st.code(lq["generated_sql"], language="sql")
-            if lq.get("reasoning"):
-                st.caption(f"Raciocínio do modelo: {lq['reasoning']}")
+                body = r.json()
+                err = (
+                    f"**{body.get('error_type', 'error')}** — "
+                    f"{body.get('message', 'Falha na consulta.')}"
+                )
+                st.error(err)
+                st.session_state.messages.append(
+                    {"role": "assistant", "content": err}
+                )

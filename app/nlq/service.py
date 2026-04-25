@@ -28,7 +28,7 @@ from app.nlq.classifier import classify_question
 from app.nlq.narrator import narrate_result
 from app.nlq.sql_generator import generate_sql
 from app.schemas.nlq import QueryResponse, TableOut
-from app.sessions.store import SessionRecord
+from app.sessions.store import ConversationTurn, SessionRecord
 
 logger = get_logger("app.nlq")
 
@@ -70,9 +70,14 @@ def _df_to_table(df: pd.DataFrame) -> TableOut:
 
 async def answer_question(session: SessionRecord, question: str) -> QueryResponse:
     """Run the full NL query pipeline against a session."""
-    # 1. Classify on-topic.
+    recent = session.recent_turns()
+
+    # 1. Classify on-topic (with conversational context).
     classification = await classify_question(
-        question, session.schema, session_id=session.session_id
+        question,
+        session.schema,
+        session_id=session.session_id,
+        history=recent,
     )
     if not classification.on_topic:
         raise NLQError(
@@ -84,7 +89,12 @@ async def answer_question(session: SessionRecord, question: str) -> QueryRespons
         )
 
     # 2. Generate SQL (with 1 retry if validator rejects).
-    attempt = await generate_sql(question, session.schema, session_id=session.session_id)
+    attempt = await generate_sql(
+        question,
+        session.schema,
+        session_id=session.session_id,
+        history=recent,
+    )
     sql = attempt.sql
     try:
         validate_sql_or_raise(sql)
@@ -101,6 +111,7 @@ async def answer_question(session: SessionRecord, question: str) -> QueryRespons
             retry_reason=first_err.reason,
             previous_sql=sql,
             session_id=session.session_id,
+            history=recent,
         )
         sql = attempt.sql
         try:
@@ -130,7 +141,11 @@ async def answer_question(session: SessionRecord, question: str) -> QueryRespons
     # 5. Narrate (best-effort; if narration fails we still return the data).
     try:
         text = await narrate_result(
-            question, sql, table, session_id=session.session_id
+            question,
+            sql,
+            table,
+            session_id=session.session_id,
+            history=recent,
         )
     except Exception as exc:
         logger.warning("nlq.narration_failed", session_id=session.session_id, exc_info=exc)
@@ -145,6 +160,17 @@ async def answer_question(session: SessionRecord, question: str) -> QueryRespons
     except Exception as exc:
         logger.warning("nlq.chart_failed", session_id=session.session_id, exc_info=exc)
         chart_spec = None
+
+    # 7. Persist the turn so next follow-up has context.
+    session.append_turn(
+        ConversationTurn(
+            question=question,
+            text=text,
+            sql=sql,
+            row_count=len(table.rows),
+            truncated=table.truncated,
+        )
+    )
 
     return QueryResponse(
         text=text,

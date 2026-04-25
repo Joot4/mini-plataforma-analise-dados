@@ -229,8 +229,16 @@ async def test_user_b_cannot_see_user_a_task(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_summary_included_without_api_key(client: AsyncClient) -> None:
+async def test_summary_included_without_api_key(
+    client: AsyncClient, monkeypatch
+) -> None:
     """Without OPENAI_API_KEY, summary still carries stats — only narration is skipped."""
+    # Explicitly clear any key inherited from .env.
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setenv("OPENAI_API_KEY", "")
+    from app.core.config import get_settings
+
+    get_settings.cache_clear()
     token = await _register_and_login(client, email="nosummary@example.com")
     r = await client.post(
         f"{API}/upload",

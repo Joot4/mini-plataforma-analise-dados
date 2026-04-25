@@ -17,6 +17,7 @@ import threading
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
+from typing import Any
 
 import duckdb
 import pandas as pd
@@ -31,6 +32,36 @@ logger = get_logger("app.sessions")
 # reference this identifier; sessions-service is the only place that resolves it.
 SESSION_TABLE_NAME = "dados"
 
+# How many previous turns we feed into the LLM prompts for follow-up coherence.
+# More context improves coherence but bloats prompts; 3 is a good default for
+# v1 follow-ups ("e por região?" after "total de vendas?").
+MAX_HISTORY_TURNS = 3
+# Total turns we KEEP in memory — even if we only inject the last N into the
+# prompt, UIs may want to re-render more history.
+MAX_HISTORY_SIZE = 20
+
+
+@dataclass
+class ConversationTurn:
+    """One user question + the assistant's answer on a session."""
+
+    question: str
+    text: str           # narration shown to the user
+    sql: str
+    row_count: int
+    truncated: bool = False
+    asked_at: datetime = field(default_factory=lambda: datetime.now(tz=timezone.utc))
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "question": self.question,
+            "text": self.text,
+            "sql": self.sql,
+            "row_count": self.row_count,
+            "truncated": self.truncated,
+            "asked_at": self.asked_at.isoformat(),
+        }
+
 
 @dataclass
 class SessionRecord:
@@ -43,6 +74,7 @@ class SessionRecord:
     last_accessed_at: datetime = field(
         default_factory=lambda: datetime.now(tz=timezone.utc)
     )
+    history: list[ConversationTurn] = field(default_factory=list)
 
     def touch(self) -> None:
         self.last_accessed_at = datetime.now(tz=timezone.utc)
@@ -56,6 +88,16 @@ class SessionRecord:
     def is_expired(self, ttl_seconds: int, now: datetime | None = None) -> bool:
         now = now or datetime.now(tz=timezone.utc)
         return (now - self.last_accessed_at) > timedelta(seconds=ttl_seconds)
+
+    def append_turn(self, turn: ConversationTurn) -> None:
+        """Store a completed Q+A turn. Caps the list at MAX_HISTORY_SIZE."""
+        self.history.append(turn)
+        if len(self.history) > MAX_HISTORY_SIZE:
+            self.history = self.history[-MAX_HISTORY_SIZE:]
+
+    def recent_turns(self, n: int = MAX_HISTORY_TURNS) -> list[ConversationTurn]:
+        """Return up to `n` most-recent turns for prompt injection."""
+        return self.history[-n:] if n > 0 else []
 
 
 class SessionStore:

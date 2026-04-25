@@ -115,10 +115,10 @@ async def test_execution_failure_returns_envelope(
     """
     monkeypatch.setenv("OPENAI_API_KEY", _FAKE_KEY)
 
-    async def fake_classify(question, schema, session_id=None):
+    async def fake_classify(question, schema, session_id=None, history=None):
         return ClassifyResponse(on_topic=True, reason="ok")
 
-    async def fake_generate(question, schema, *, retry_reason=None, previous_sql=None, session_id=None):
+    async def fake_generate(question, schema, *, retry_reason=None, previous_sql=None, session_id=None, history=None):
         return SQLResponse(sql="SELECT coluna_inexistente FROM dados", reasoning="-")
 
     monkeypatch.setattr("app.nlq.service.classify_question", fake_classify)
@@ -141,10 +141,10 @@ async def test_invalid_question_envelope(client: AsyncClient, monkeypatch) -> No
     """Both SQL attempts are rejected by the validator → invalid_question envelope."""
     monkeypatch.setenv("OPENAI_API_KEY", _FAKE_KEY)
 
-    async def fake_classify(question, schema, session_id=None):
+    async def fake_classify(question, schema, session_id=None, history=None):
         return ClassifyResponse(on_topic=True, reason="ok")
 
-    async def always_invalid(question, schema, *, retry_reason=None, previous_sql=None, session_id=None):
+    async def always_invalid(question, schema, *, retry_reason=None, previous_sql=None, session_id=None, history=None):
         return SQLResponse(sql="DROP TABLE dados", reasoning="-")
 
     monkeypatch.setattr("app.nlq.service.classify_question", fake_classify)
@@ -172,7 +172,7 @@ async def test_unhandled_exception_returns_generic_envelope(
     monkeypatch.setenv("OPENAI_API_KEY", _FAKE_KEY)
     monkeypatch.setenv("DEBUG", "false")
 
-    async def crash(question, schema, session_id=None):
+    async def crash(question, schema, session_id=None, history=None):
         raise RuntimeError("PII_SECRET_IN_MESSAGE: Traceback (most recent call last)")
 
     monkeypatch.setattr("app.nlq.service.classify_question", crash)

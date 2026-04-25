@@ -44,18 +44,19 @@ def _patch_llm(monkeypatch, *, on_topic: bool, sql: str, narration: str, retry_s
     """Monkeypatch classifier / sql-generator / narrator with canned responses."""
     calls = {"generate_sql": 0}
 
-    async def fake_classify(question, schema, session_id=None):
+    async def fake_classify(question, schema, session_id=None, history=None):
         return ClassifyResponse(on_topic=on_topic, reason="ok")
 
     async def fake_generate(
-        question, schema, *, retry_reason=None, previous_sql=None, session_id=None
+        question, schema, *, retry_reason=None, previous_sql=None,
+        session_id=None, history=None,
     ):
         calls["generate_sql"] += 1
         if calls["generate_sql"] == 1:
             return SQLResponse(sql=sql, reasoning="primeira tentativa")
         return SQLResponse(sql=retry_sql or sql, reasoning="segunda tentativa")
 
-    async def fake_narrate(question, sql, table, session_id=None):
+    async def fake_narrate(question, sql, table, session_id=None, history=None):
         return narration
 
     monkeypatch.setattr(nlq_service, "classify_question", fake_classify)

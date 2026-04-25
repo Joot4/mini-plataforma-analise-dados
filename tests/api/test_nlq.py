@@ -47,7 +47,13 @@ async def test_query_requires_auth(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_query_without_api_key_returns_503(client: AsyncClient) -> None:
+async def test_query_without_api_key_returns_503(
+    client: AsyncClient, monkeypatch
+) -> None:
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setenv("OPENAI_API_KEY", "")
+    from app.core.config import get_settings
+    get_settings.cache_clear()
     token = await _login(client, "nlq-nokey@example.com")
     session_id = await _upload_and_session(client, token)
     r = await client.post(
@@ -65,16 +71,16 @@ async def test_happy_path_returns_table_and_chart(
 ) -> None:
     monkeypatch.setenv("OPENAI_API_KEY", _FAKE_KEY)
 
-    async def fake_classify(question, schema, session_id=None):
+    async def fake_classify(question, schema, session_id=None, history=None):
         return ClassifyResponse(on_topic=True, reason="sobre vendas")
 
-    async def fake_generate(question, schema, *, retry_reason=None, previous_sql=None, session_id=None):
+    async def fake_generate(question, schema, *, retry_reason=None, previous_sql=None, session_id=None, history=None):
         return SQLResponse(
             sql='SELECT regiao, SUM(preco_r) AS total FROM dados GROUP BY regiao',
             reasoning="soma por regiao",
         )
 
-    async def fake_narrate(question, sql, table, session_id=None):
+    async def fake_narrate(question, sql, table, session_id=None, history=None):
         return "O Sudeste concentra o maior volume de vendas."
 
     monkeypatch.setattr("app.nlq.service.classify_question", fake_classify)
@@ -102,7 +108,7 @@ async def test_happy_path_returns_table_and_chart(
 async def test_off_topic_question_returns_400(client: AsyncClient, monkeypatch) -> None:
     monkeypatch.setenv("OPENAI_API_KEY", _FAKE_KEY)
 
-    async def fake_classify(question, schema, session_id=None):
+    async def fake_classify(question, schema, session_id=None, history=None):
         return ClassifyResponse(on_topic=False, reason="pergunta geral")
 
     monkeypatch.setattr("app.nlq.service.classify_question", fake_classify)

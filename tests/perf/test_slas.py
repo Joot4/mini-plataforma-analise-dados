@@ -96,16 +96,16 @@ async def test_nlq_pipeline_under_10s(client: AsyncClient, monkeypatch) -> None:
     """
     monkeypatch.setenv("OPENAI_API_KEY", "sk-" + secrets.token_hex(16))
 
-    async def fast_classify(question, schema, session_id=None):
+    async def fast_classify(question, schema, session_id=None, history=None):
         return ClassifyResponse(on_topic=True, reason="ok")
 
-    async def fast_generate(question, schema, *, retry_reason=None, previous_sql=None, session_id=None):
+    async def fast_generate(question, schema, *, retry_reason=None, previous_sql=None, session_id=None, history=None):
         return SQLResponse(
             sql="SELECT regiao, SUM(quantidade) AS total FROM dados GROUP BY regiao",
             reasoning="soma por regiao",
         )
 
-    async def fast_narrate(question, sql, table, session_id=None):
+    async def fast_narrate(question, sql, table, session_id=None, history=None):
         return "Resposta rápida."
 
     monkeypatch.setattr("app.nlq.service.classify_question", fast_classify)
