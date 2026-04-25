@@ -60,7 +60,7 @@ with st.sidebar:
     st.header("🔐 Autenticação")
     if st.session_state.token:
         st.success(f"Logado como **{st.session_state.email}**")
-        if st.button("Sair", use_container_width=True):
+        if st.button("Sair", width="stretch"):
             for k in list(st.session_state.keys()):
                 st.session_state.pop(k)
             st.rerun()
@@ -70,7 +70,7 @@ with st.sidebar:
             with st.form("login", clear_on_submit=False):
                 email = st.text_input("Email", key="login_email")
                 password = st.text_input("Senha", type="password", key="login_pw")
-                if st.form_submit_button("Entrar", use_container_width=True):
+                if st.form_submit_button("Entrar", width="stretch"):
                     with api() as c:
                         r = c.post(
                             "/auth/login",
@@ -88,7 +88,7 @@ with st.sidebar:
                 password_r = st.text_input(
                     "Senha (mínimo 8 caracteres)", type="password", key="reg_pw"
                 )
-                if st.form_submit_button("Criar conta", use_container_width=True):
+                if st.form_submit_button("Criar conta", width="stretch"):
                     with api() as c:
                         r = c.post(
                             "/auth/register",
@@ -174,7 +174,7 @@ else:
     with top_a:
         st.header("Dataset carregado")
     with top_b:
-        if st.button("Trocar arquivo", use_container_width=True):
+        if st.button("Trocar arquivo", width="stretch"):
             for k in (
                 "session_id",
                 "summary",
@@ -264,30 +264,48 @@ else:
             )
 
     # --- Column stats table ---
+    # Mixed numeric/datetime/categorical rows in the same DataFrame produce a
+    # column of mixed Python types that Arrow refuses to serialize. Format
+    # everything as strings up front so each visible column has one dtype.
+    def _fmt_num(v: object) -> str:
+        if v is None or v == "":
+            return ""
+        try:
+            f = float(v)
+        except (TypeError, ValueError):
+            return str(v)
+        # Drop trailing zeros, cap at 4 decimal places.
+        return f"{f:.4f}".rstrip("0").rstrip(".") or "0"
+
     with st.expander("📐 Estatísticas por coluna", expanded=True):
         rows = []
         for c in summary.get("columns", []):
-            row: dict[str, object] = {
+            row: dict[str, str | int | float] = {
                 "coluna": c["label"],
                 "alias": c["alias"],
                 "tipo": c["kind"],
                 "nulos (%)": c["null_pct"],
                 "únicos": c["unique"],
+                "min": "",
+                "max": "",
+                "média": "",
+                "mediana": "",
+                "top": "",
             }
             if c["kind"] == "numeric":
-                row["min"] = c.get("min")
-                row["max"] = c.get("max")
-                row["média"] = c.get("mean")
-                row["mediana"] = c.get("median")
+                row["min"] = _fmt_num(c.get("min"))
+                row["max"] = _fmt_num(c.get("max"))
+                row["média"] = _fmt_num(c.get("mean"))
+                row["mediana"] = _fmt_num(c.get("median"))
             elif c["kind"] == "datetime":
-                row["min"] = c.get("min")
-                row["max"] = c.get("max")
+                row["min"] = str(c.get("min") or "")
+                row["max"] = str(c.get("max") or "")
             else:
                 top = c.get("top5", [])
                 row["top"] = ", ".join(f"{t['value']} ({t['freq']})" for t in top[:3])
             rows.append(row)
         if rows:
-            st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+            st.dataframe(pd.DataFrame(rows), width="stretch", hide_index=True)
 
     st.divider()
 
@@ -327,7 +345,7 @@ else:
     with hdr_col:
         st.header("2. Conversa sobre os dados")
     with reset_col:
-        if st.session_state.messages and st.button("🧹 Limpar conversa", use_container_width=True):
+        if st.session_state.messages and st.button("🧹 Limpar conversa", width="stretch"):
             with api() as c:
                 c.delete(
                     f"/sessions/{st.session_state.session_id}/conversation",
@@ -362,7 +380,7 @@ else:
                 df = pd.DataFrame(table["rows"], columns=table["columns"])
                 if table.get("truncated"):
                     st.caption(f"⚠️ Resultado truncado em {len(df)} linhas.")
-                st.dataframe(df, use_container_width=True, hide_index=True)
+                st.dataframe(df, width="stretch", hide_index=True)
                 st.download_button(
                     "⬇️ Baixar CSV",
                     df.to_csv(index=False).encode("utf-8"),
@@ -371,7 +389,7 @@ else:
                 )
             with tab_chart:
                 if lq.get("chart_spec"):
-                    st.vega_lite_chart(lq["chart_spec"], use_container_width=True)
+                    st.vega_lite_chart(lq["chart_spec"], width="stretch")
                 else:
                     st.info("Este resultado não tem formato adequado para gráfico.")
             with tab_sql:
