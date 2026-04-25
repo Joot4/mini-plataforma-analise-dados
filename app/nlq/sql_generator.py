@@ -30,7 +30,12 @@ SYSTEM = (
     "2. Use apenas os aliases ASCII das colunas (coluna `alias` do schema); "
     "NUNCA os nomes originais com acentos.\n"
     "3. Sempre termine com LIMIT 1000 quando o resultado puder ser grande.\n"
-    "4. Responda em JSON no formato do response_format — sql com a query e "
+    "4. Quando agrupar por uma coluna categórica (GROUP BY), exclua linhas "
+    "onde essa coluna está nula ou vazia: adicione "
+    "`WHERE <coluna> IS NOT NULL AND <coluna> != ''` no SELECT. Exceção: "
+    "se o usuário perguntou EXPLICITAMENTE sobre nulos / faltantes / vazios, "
+    "não aplique esse filtro.\n"
+    "5. Responda em JSON no formato do response_format — sql com a query e "
     "reasoning com 1-2 frases em português."
 )
 
