@@ -17,6 +17,7 @@ from app.core.config import get_settings  # noqa: E402
 from app.core.security import _reset_secret  # noqa: E402
 from app.db.models import Base  # noqa: E402
 from app.main import create_app  # noqa: E402
+from app.sessions.store import reset_session_store  # noqa: E402
 from app.tasks.registry import reset_task_registry  # noqa: E402
 
 
@@ -58,6 +59,7 @@ async def client(db_engine) -> AsyncIterator[AsyncClient]:
     get_settings.cache_clear()
     _reset_secret()
     reset_task_registry()
+    reset_session_store()
     app = create_app()
     app.dependency_overrides[get_db_session] = _override_get_db_session
 
