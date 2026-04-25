@@ -225,8 +225,8 @@ else:
         m4, m5, m6 = st.columns(3)
         m4.metric("Tipos convertidos", len(cleaning.get("tipos_convertidos", [])))
         m5.metric(
-            "Textos padronizados",
-            len(cleaning.get("textos_padronizados", [])),
+            "Categorias normalizadas",
+            len(cleaning.get("categorias_normalizadas", [])),
         )
         m6.metric(
             "Colunas vazias removidas",
@@ -248,6 +248,15 @@ else:
             details.append(
                 "**Texto padronizado (trim + StringDtype):** "
                 + ", ".join(f"`{c}`" for c in cleaning["textos_padronizados"])
+            )
+        if cleaning.get("categorias_normalizadas"):
+            entries = [
+                f"`{e['coluna']}` ({e['antes']} → {e['depois']})"
+                for e in cleaning["categorias_normalizadas"]
+            ]
+            details.append(
+                "**Categorias normalizadas (lowercase resolveu duplicação):** "
+                + ", ".join(entries)
             )
         if cleaning.get("colunas_vazias_removidas"):
             details.append(

@@ -6,6 +6,7 @@ only — no chained assignment). String dtype is `StringDtype`, never `object`.
 
 from __future__ import annotations
 
+import unicodedata
 from dataclasses import dataclass, field
 
 import pandas as pd
@@ -18,6 +19,16 @@ from app.ingestion.detector import (
 )
 
 
+def _deaccent_lower(s: object) -> object:
+    """Strip accents (NFKD → ASCII) AND lowercase. NaN-safe."""
+    if s is None or (isinstance(s, float) and pd.isna(s)):
+        return s
+    text = str(s)
+    nfkd = unicodedata.normalize("NFKD", text)
+    ascii_text = nfkd.encode("ascii", "ignore").decode("ascii")
+    return ascii_text.lower().strip()
+
+
 @dataclass
 class CleaningReport:
     nulos_preenchidos: int = 0
@@ -25,6 +36,7 @@ class CleaningReport:
     tipos_convertidos: list[str] = field(default_factory=list)
     colunas_pt_br_normalizadas: list[str] = field(default_factory=list)
     textos_padronizados: list[str] = field(default_factory=list)
+    categorias_normalizadas: list[dict[str, object]] = field(default_factory=list)
     linhas_vazias_removidas: int = 0
     colunas_vazias_removidas: list[str] = field(default_factory=list)
 
@@ -35,6 +47,7 @@ class CleaningReport:
             "tipos_convertidos": self.tipos_convertidos,
             "colunas_pt_br_normalizadas": self.colunas_pt_br_normalizadas,
             "textos_padronizados": self.textos_padronizados,
+            "categorias_normalizadas": self.categorias_normalizadas,
             "linhas_vazias_removidas": self.linhas_vazias_removidas,
             "colunas_vazias_removidas": self.colunas_vazias_removidas,
         }
@@ -46,6 +59,17 @@ class CleaningOptions:
     drop_duplicates: bool = True
     convert_types: bool = True
     standardize_text: bool = True
+    # Detect case/whitespace duplication in categorical columns (e.g.
+    # "Moagem_01" vs "moagem_01" vs "MOAGEM_01") and lowercase them so they
+    # collapse to a single category. Only kicks in when a column has
+    # low cardinality AND lowercasing produces fewer distinct values.
+    normalize_categories: bool = True
+
+
+# Cardinality threshold for treating a column as "categorical-ish" for the
+# case-normalization step. Above this we leave the column alone (likely free
+# text or high-cardinality identifiers).
+_CATEGORICAL_UNIQUE_CAP = 50
 
 
 def clean_dataframe(
@@ -131,5 +155,35 @@ def clean_dataframe(
             if pd.api.types.is_object_dtype(series) or pd.api.types.is_string_dtype(series):
                 out[col] = series.astype("string").str.strip()
                 report.textos_padronizados.append(col)
+
+    # 6. Case + accent normalization for categorical-ish columns.
+    # Resolves duplication caused by:
+    #   - Inconsistent capitalization ("Moagem_01" / "moagem_01" / "MOAGEM_01")
+    #   - Accent variation ("Pelotização" / "pelotizacao", "manhã" / "manha")
+    # Only applies when cardinality is bounded AND lowercasing+deaccenting
+    # produces fewer distinct values (evidence of duplication).
+    if opts.normalize_categories:
+        for col in out.columns:
+            series = out[col]
+            if not (
+                pd.api.types.is_string_dtype(series) or pd.api.types.is_object_dtype(series)
+            ):
+                continue
+            unique_raw = int(series.nunique(dropna=True))
+            if unique_raw < 2 or unique_raw > _CATEGORICAL_UNIQUE_CAP:
+                continue
+            normalized = (
+                series.astype("string").map(_deaccent_lower, na_action="ignore")
+            ).astype("string")
+            unique_norm = int(normalized.nunique(dropna=True))
+            if unique_norm < unique_raw:
+                out[col] = normalized
+                report.categorias_normalizadas.append(
+                    {
+                        "coluna": col,
+                        "antes": unique_raw,
+                        "depois": unique_norm,
+                    }
+                )
 
     return out, report

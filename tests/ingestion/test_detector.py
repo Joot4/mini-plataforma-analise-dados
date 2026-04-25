@@ -114,3 +114,54 @@ def test_is_date_series_detects_iso_with_seconds_and_tz() -> None:
         pd.Series(["2026-04-01T08:00:00.123", "2026-04-01T08:00:00.456"]),
     ]:
         assert is_date_series(s) is True
+
+
+# --- Categorical normalization (lowercase to resolve duplication) ---
+
+import pandas as pd  # noqa: E402
+
+from app.ingestion.cleaning import clean_dataframe  # noqa: E402
+
+
+def test_categorical_lowercase_collapses_capitalization_variants():
+    """Real-world quirk: "Moagem_01" / "moagem_01" / "MOAGEM_01" should
+    collapse to a single category after cleaning."""
+    df = pd.DataFrame(
+        {
+            "equipamento": ["Moagem_01", "moagem_01", "MOAGEM_01", "Forno_03", "forno_03"],
+            "valor": [1, 2, 3, 4, 5],
+        }
+    )
+    cleaned, report = clean_dataframe(df)
+    # 5 raw distinct → 2 after lowercase (moagem_01, forno_03).
+    assert cleaned["equipamento"].nunique() == 2
+    assert any(
+        e["coluna"] == "equipamento" and e["antes"] == 5 and e["depois"] == 2
+        for e in report.categorias_normalizadas
+    )
+
+
+def test_categorical_already_clean_is_left_alone():
+    df = pd.DataFrame(
+        {
+            "regiao": ["Sul", "Norte", "Sudeste"] * 3,
+            "valor": list(range(9)),
+        }
+    )
+    cleaned, report = clean_dataframe(df)
+    # All 3 distinct values are unique even after lowercase — no normalization.
+    assert cleaned["equipamento" if "equipamento" in cleaned.columns else "regiao"].iloc[0] == "Sul"
+    assert report.categorias_normalizadas == []
+
+
+def test_high_cardinality_column_not_normalized():
+    """Free-text columns shouldn't be lowercased en masse."""
+    long_strings = [f"Observação número {i} aqui" for i in range(100)]
+    df = pd.DataFrame({"observacao": long_strings, "valor": list(range(100))})
+    cleaned, report = clean_dataframe(df)
+    # observacao has 100 distinct → exceeds CATEGORICAL_UNIQUE_CAP, skipped.
+    # First value should still have original casing.
+    assert cleaned["observacao"].iloc[0].startswith("Observação")
+    assert all(
+        e["coluna"] != "observacao" for e in report.categorias_normalizadas
+    )
