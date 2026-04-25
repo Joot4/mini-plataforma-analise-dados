@@ -15,8 +15,9 @@ WORKDIR /app
 
 COPY pyproject.toml uv.lock .python-version ./
 
-# Only pull the `ui` group (streamlit + its deps) — skip runtime/dev/other groups.
-RUN uv sync --frozen --no-default-groups --group ui --no-install-project
+# Only pull the `ui` group (streamlit + its deps); `--only-group` skips both
+# `[project.dependencies]` (heavy backend libs we don't need here) and other groups.
+RUN uv sync --frozen --only-group ui --no-install-project
 
 
 FROM python:3.12-slim AS runtime
