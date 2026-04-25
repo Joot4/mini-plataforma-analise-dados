@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 
 from app.api.v1 import auth as auth_router
 from app.api.v1 import health as health_router
+from app.api.v1 import nlq as nlq_router
 from app.api.v1 import sessions as sessions_router
 from app.api.v1 import upload as upload_router
 from app.core.config import get_settings
@@ -111,6 +112,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router.router, prefix="/api/v1")
     app.include_router(upload_router.router, prefix="/api/v1")
     app.include_router(sessions_router.router, prefix="/api/v1")
+    app.include_router(nlq_router.router, prefix="/api/v1")
 
     return app
 
