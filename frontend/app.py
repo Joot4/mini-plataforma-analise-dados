@@ -215,18 +215,53 @@ else:
         )
 
     # --- Cleaning report ---
-    with st.expander("🧹 Relatório de limpeza"):
-        c1, c2, c3 = st.columns(3)
-        c1.metric("Duplicatas removidas", cleaning.get("duplicatas_removidas", 0))
-        c2.metric("Linhas vazias", cleaning.get("linhas_vazias_removidas", 0))
-        c3.metric("Nulos preenchidos", cleaning.get("nulos_preenchidos", 0))
+    with st.expander("🧹 Relatório de limpeza", expanded=True):
+        # Quick metrics — every transformation we counted.
+        m1, m2, m3 = st.columns(3)
+        m1.metric("Duplicatas removidas", cleaning.get("duplicatas_removidas", 0))
+        m2.metric("Linhas vazias", cleaning.get("linhas_vazias_removidas", 0))
+        m3.metric("Nulos preenchidos", cleaning.get("nulos_preenchidos", 0))
+
+        m4, m5, m6 = st.columns(3)
+        m4.metric("Tipos convertidos", len(cleaning.get("tipos_convertidos", [])))
+        m5.metric(
+            "Textos padronizados",
+            len(cleaning.get("textos_padronizados", [])),
+        )
+        m6.metric(
+            "Colunas vazias removidas",
+            len(cleaning.get("colunas_vazias_removidas", [])),
+        )
+
+        details: list[str] = []
         if cleaning.get("colunas_pt_br_normalizadas"):
-            st.caption(
-                "Colunas PT-BR convertidas para número: "
-                + ", ".join(cleaning["colunas_pt_br_normalizadas"])
+            details.append(
+                "**Números PT-BR (`1.234,56`) convertidos:** "
+                + ", ".join(f"`{c}`" for c in cleaning["colunas_pt_br_normalizadas"])
             )
         if cleaning.get("tipos_convertidos"):
-            st.caption("Tipos inferidos: " + ", ".join(cleaning["tipos_convertidos"]))
+            details.append(
+                "**Tipos inferidos automaticamente:** "
+                + ", ".join(f"`{c}`" for c in cleaning["tipos_convertidos"])
+            )
+        if cleaning.get("textos_padronizados"):
+            details.append(
+                "**Texto padronizado (trim + StringDtype):** "
+                + ", ".join(f"`{c}`" for c in cleaning["textos_padronizados"])
+            )
+        if cleaning.get("colunas_vazias_removidas"):
+            details.append(
+                "**Colunas 100% vazias removidas:** "
+                + ", ".join(f"`{c}`" for c in cleaning["colunas_vazias_removidas"])
+            )
+        if details:
+            for d in details:
+                st.markdown(d)
+        else:
+            st.caption(
+                "ℹ️ Nenhuma transformação foi necessária — o arquivo já estava "
+                "totalmente limpo."
+            )
 
     # --- Column stats table ---
     with st.expander("📐 Estatísticas por coluna", expanded=True):

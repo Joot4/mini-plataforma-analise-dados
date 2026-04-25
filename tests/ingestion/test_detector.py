@@ -84,3 +84,33 @@ def test_parse_dates_with_day_greater_than_12_stays_ddmm() -> None:
     assert unambiguous is True
     assert parsed.dt.day.tolist() == [15, 3, 21]
     assert parsed.dt.month.tolist() == [7, 2, 11]
+
+
+def test_is_date_series_detects_iso_with_time() -> None:
+    """Regression: previously YYYY-MM-DD HH:MM was classified as categorical,
+    leading the LLM to narrate it as a string column."""
+    s = pd.Series(["2026-04-01 08:00", "2026-04-01 12:00", "2026-04-02 16:00"])
+    assert is_date_series(s) is True
+
+
+def test_is_date_series_detects_iso_date_only() -> None:
+    s = pd.Series(["2024-01-15", "2024-07-10", "2023-12-01"])
+    assert is_date_series(s) is True
+
+
+def test_parse_iso_datetime_preserves_components() -> None:
+    s = pd.Series(["2026-04-01 08:00", "2026-04-01 16:00", "2026-04-02 20:00"])
+    parsed, _ = parse_date_series(s)
+    assert parsed.dt.year.tolist() == [2026, 2026, 2026]
+    assert parsed.dt.hour.tolist() == [8, 16, 20]
+
+
+def test_is_date_series_detects_iso_with_seconds_and_tz() -> None:
+    """Detection regex covers seconds + timezone variants. (Parsing relies on
+    callers' columns being uniform; mixed-precision inside one column is rare.)"""
+    for s in [
+        pd.Series(["2026-04-01T08:00:00", "2026-04-01T09:00:00", "2026-04-01T10:00:00"]),
+        pd.Series(["2026-04-01T08:00:00Z", "2026-04-01T09:00:00Z"]),
+        pd.Series(["2026-04-01T08:00:00.123", "2026-04-01T08:00:00.456"]),
+    ]:
+        assert is_date_series(s) is True

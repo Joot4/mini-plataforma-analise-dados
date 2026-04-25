@@ -23,6 +23,12 @@ PTBR_NUMBER_RE = re.compile(r"^-?\d{1,3}(\.\d{3})*(,\d+)?$|^-?\d+(,\d+)?$")
 CURRENCY_PREFIX_RE = re.compile(r"^R\$\s*")
 # Date pattern DD/MM/YYYY or DD-MM-YYYY (2- or 4-digit year accepted).
 DATE_RE = re.compile(r"^(\d{1,2})[/\-](\d{1,2})[/\-](\d{2}|\d{4})$")
+# ISO date / datetime: YYYY-MM-DD, YYYY-MM-DD HH:MM(:SS)?, YYYY-MM-DDTHH:MM(:SS)?(Z|±HH:MM)?
+ISO_DATE_RE = re.compile(
+    r"^\d{4}-\d{2}-\d{2}"
+    r"(?:[ T]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+\-]\d{2}:?\d{2})?)?"
+    r"$"
+)
 
 
 def detect_encoding(raw: bytes) -> str:
@@ -110,28 +116,37 @@ def parse_ptbr_number_series(series: pd.Series) -> pd.Series:
 
 
 def is_date_series(series: pd.Series, threshold: float = 0.8) -> bool:
-    """Return True if >= threshold of non-null values look like DD/MM/YYYY or similar."""
+    """Return True if >= threshold of non-null values match DD/MM/YYYY or ISO date/datetime."""
     non_null = series.dropna().astype(str).str.strip()
     if len(non_null) == 0:
         return False
-    matches = non_null.apply(lambda s: bool(DATE_RE.match(s)))
+    matches = non_null.apply(
+        lambda s: bool(DATE_RE.match(s) or ISO_DATE_RE.match(s))
+    )
     return bool(matches.mean() >= threshold)
 
 
 def parse_date_series(series: pd.Series) -> tuple[pd.Series, bool]:
     """Parse a date string Series. Returns (parsed_series, dayfirst_used).
 
-    Uses `dayfirst=True` by default (PT-BR safe). If any first-token value > 12,
-    format is unambiguously DD/MM — dayfirst stays True.
+    - ISO-formatted strings (YYYY-MM-DD…) are unambiguous; pandas parses them
+      natively without needing `dayfirst`.
+    - Slash/dash DD/MM date strings use `dayfirst=True` (PT-BR safe).
     """
     non_null = series.dropna().astype(str).str.strip()
+    if len(non_null) == 0:
+        return pd.to_datetime(series, errors="coerce"), False
+
+    iso_share = non_null.head(50).apply(lambda s: bool(ISO_DATE_RE.match(s))).mean()
+    if iso_share > 0.5:
+        # ISO format — dayfirst is irrelevant.
+        return pd.to_datetime(series, errors="coerce"), False
+
     first_parts = non_null.str.split(r"[/\-]").str[0]
     numeric_first = pd.to_numeric(first_parts, errors="coerce")
-    # Even without day>12 evidence, default to dayfirst=True in PT-BR context.
-    dayfirst = True
-    parsed = pd.to_datetime(series, dayfirst=dayfirst, errors="coerce")
+    parsed = pd.to_datetime(series, dayfirst=True, errors="coerce")
     unambiguous = bool((numeric_first > 12).any())
-    return parsed, dayfirst and unambiguous
+    return parsed, unambiguous
 
 
 def read_csv_bytes_with_encoding(
