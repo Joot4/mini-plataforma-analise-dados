@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: phase_4_shipped
-stopped_at: Phase 4 — structured summary + LLM narration shipped, 89/89 tests green
-last_updated: "2026-04-25T02:50:00Z"
-last_activity: 2026-04-25 — Phase 4 (Structured Summary) shipped. DuckDB stats engine (per-column: numeric min/max/mean/median, datetime min/max, categorical top5; null_pct + unique everywhere), AsyncOpenAI wrapper with Pydantic structured output (`parse()` + NarrationResponse), OPS-03 structured log for every LLM call (provider, model, tokens_in/out, cost_estimated, latency_ms, session_id), cost table (gpt-4o-mini/4o/4.1 family), upload task result now includes `summary` with narration or narration_error when API key missing. Upload job refactored from executor-sync to asyncio-to-thread + native async for LLM. 89 tests green.
+status: phase_5_shipped
+stopped_at: Phase 5 — NL Query pipeline shipped, 108/108 tests green
+last_updated: "2026-04-25T03:10:00Z"
+last_activity: 2026-04-25 — Phase 5 (NL Query) shipped. End-to-end pipeline classify → gen_sql → validate → exec → narrate → chart: classifier (on/off-topic via LLM structured output), SQL generator with 1-retry on AST validator failure then invalid_question, execution via session DuckDB conn (off-loop with asyncio.to_thread), result truncated at 1000 rows with flag, narrator (1-3 frases PT-BR), chart heuristic (datetime+num → line; cat+num → bar; 2 num → point; else null) via Altair to_dict normalized to inline data.values + string mark. POST /api/v1/sessions/{id}/query live. 108 tests green.
 progress:
   total_phases: 6
-  completed_phases: 4
-  total_plans: 11
-  completed_plans: 11
+  completed_phases: 5
+  total_plans: 12
+  completed_plans: 12
   percent: 100
 verification:
   phase_1:
@@ -31,6 +31,10 @@ verification:
     status: shipped
     tests_green: 89/89
     coverage_map: "SC#1 stats shape in task result — test_summary_columns_have_expected_shape + test_summary_included_without_api_key; SC#2 narration references actual data — test_summary_includes_narration_when_api_key_set (mocked OpenAI returning narration mentioning 'Sudeste' from real stats); SC#3 OPS-03 structured log — test_llm_call_emits_ops03_log verifies provider/model/tokens_in/tokens_out/cost_estimated/latency_ms/session_id all present"
+  phase_5:
+    status: shipped
+    tests_green: 108/108
+    coverage_map: "SC#1 happy path with text/table/sql — test_happy_path_returns_table_and_chart (integration) + test_happy_path_returns_full_response (orchestrator); SC#2 off-topic rejected — test_off_topic_question_returns_400 + test_off_topic_raises_out_of_scope; SC#3 chart shapes — test_categorical_plus_numeric_gives_bar / test_two_numerics_gives_point / test_truncation_at_1000_rows (truncated=true + 1000 rows exactly). Also: retry-once path (test_invalid_sql_retries_once_then_fails + test_invalid_first_attempt_retry_succeeds), cross-user 404, 422 empty question, 503 when OPENAI_API_KEY missing"
 ---
 
 # Project State

@@ -47,21 +47,21 @@ Requisitos para a entrega inicial. Cada um mapeia para uma fase do roadmap.
 
 ### NL Query
 
-- [ ] **NLQ-01**: Endpoint recebe `{session_id, question}` em PT-BR e retorna `{text, table, chart_spec, generated_sql, error?}`
-- [ ] **NLQ-02**: Classificador de off-topic: LLM primeiro decide se a pergunta é sobre os dados da sessão; se não, retorna erro `out_of_scope` com mensagem amigável em PT-BR
-- [ ] **NLQ-03**: Prompt construído com: schema manifest (aliases + tipos + 3-5 linhas sample) + pergunta do usuário; NUNCA inclui o dataset completo
-- [ ] **NLQ-04**: LLM chamado via `AsyncOpenAI.chat.completions.parse()` com Pydantic `SQLResponse(sql: str, reasoning: str)` como `response_format` (structured output)
-- [ ] **NLQ-05**: Retry 1x automático se SQL retornado for inválido (reinjeta schema + erro no prompt); após 2ª falha retorna `invalid_question` pedindo reformulação
-- [ ] **NLQ-06**: Resultado DuckDB é convertido em `table: {columns, rows}`; se > 1000 linhas, trunca para 1000 com flag `truncated: true`
-- [ ] **NLQ-07**: Narração da resposta (1-3 frases em PT-BR explicando o resultado) é gerada por LLM num segundo call com o resultado estruturado
-- [ ] **NLQ-08**: Campo `generated_sql` sempre retornado no envelope (transparência/explicabilidade — usuário pode conferir)
-- [ ] **NLQ-09**: Tipo de gráfico é escolhido por heurística determinística em Python baseada no AST da SQL + shape do resultado:
+- [x] **NLQ-01**: Endpoint recebe `{session_id, question}` em PT-BR e retorna `{text, table, chart_spec, generated_sql, error?}`
+- [x] **NLQ-02**: Classificador de off-topic: LLM primeiro decide se a pergunta é sobre os dados da sessão; se não, retorna erro `out_of_scope` com mensagem amigável em PT-BR
+- [x] **NLQ-03**: Prompt construído com: schema manifest (aliases + tipos + 3-5 linhas sample) + pergunta do usuário; NUNCA inclui o dataset completo
+- [x] **NLQ-04**: LLM chamado via `AsyncOpenAI.chat.completions.parse()` com Pydantic `SQLResponse(sql: str, reasoning: str)` como `response_format` (structured output)
+- [x] **NLQ-05**: Retry 1x automático se SQL retornado for inválido (reinjeta schema + erro no prompt); após 2ª falha retorna `invalid_question` pedindo reformulação
+- [x] **NLQ-06**: Resultado DuckDB é convertido em `table: {columns, rows}`; se > 1000 linhas, trunca para 1000 com flag `truncated: true`
+- [x] **NLQ-07**: Narração da resposta (1-3 frases em PT-BR explicando o resultado) é gerada por LLM num segundo call com o resultado estruturado
+- [x] **NLQ-08**: Campo `generated_sql` sempre retornado no envelope (transparência/explicabilidade — usuário pode conferir)
+- [x] **NLQ-09**: Tipo de gráfico é escolhido por heurística determinística em Python baseada no AST da SQL + shape do resultado:
   - 1 categórica + 1 numérica → `bar`
   - coluna de data + numérica → `line`
   - 2 numéricas → `scatter`
   - 1 categórica com ≤5 valores + 1 numérica com agregação → `pie` (opcional)
   - outros → só tabela, `chart_spec = null`
-- [ ] **NLQ-10**: `chart_spec` é JSON compatível com Vega-Lite v6 (emitido via Altair `to_dict()` server-side — valida o schema antes de retornar)
+- [x] **NLQ-10**: `chart_spec` é JSON compatível com Vega-Lite v6 (emitido via Altair `to_dict()` server-side — valida o schema antes de retornar)
 
 ### Segurança SQL
 
@@ -168,16 +168,16 @@ Mapa de qual fase cobre qual requisito. Populado durante a criação do roadmap.
 | SUM-01 | Phase 4 | Done (04-shipped) |
 | SUM-02 | Phase 4 | Done (04-shipped) |
 | SUM-03 | Phase 4 | Done (04-shipped) |
-| NLQ-01 | Phase 5 | Pending |
-| NLQ-02 | Phase 5 | Pending |
-| NLQ-03 | Phase 5 | Pending |
-| NLQ-04 | Phase 5 | Pending |
-| NLQ-05 | Phase 5 | Pending |
-| NLQ-06 | Phase 5 | Pending |
-| NLQ-07 | Phase 5 | Pending |
-| NLQ-08 | Phase 5 | Pending |
-| NLQ-09 | Phase 5 | Pending |
-| NLQ-10 | Phase 5 | Pending |
+| NLQ-01 | Phase 5 | Done (05-shipped) |
+| NLQ-02 | Phase 5 | Done (05-shipped) |
+| NLQ-03 | Phase 5 | Done (05-shipped) |
+| NLQ-04 | Phase 5 | Done (05-shipped) |
+| NLQ-05 | Phase 5 | Done (05-shipped) |
+| NLQ-06 | Phase 5 | Done (05-shipped) |
+| NLQ-07 | Phase 5 | Done (05-shipped) |
+| NLQ-08 | Phase 5 | Done (05-shipped) |
+| NLQ-09 | Phase 5 | Done (05-shipped) |
+| NLQ-10 | Phase 5 | Done (05-shipped) |
 | SQL-01 | Phase 3 | Done (03-shipped) |
 | SQL-02 | Phase 3 | Done (03-shipped) |
 | SQL-03 | Phase 3 | Done (03-shipped) |
