@@ -106,9 +106,11 @@ def clean_dataframe(
         report.duplicatas_removidas = before - len(out)
 
     # 4. Null fill — per-column strategy:
-    #    - numeric → 0
-    #    - datetime → leave as NaT (filling dates is usually wrong)
-    #    - string/object → ""
+    #    - string/object → "" (so SQL filters like `coluna != ''` work)
+    #    - numeric    → KEEP NaN. Filling with 0 distorts MEDIAN/AVG/etc.
+    #                   DuckDB aggregates already skip NaN, and `null_pct` in
+    #                   the summary then reflects true missingness.
+    #    - datetime   → KEEP NaT (filling dates is almost always wrong)
     if opts.fill_nulls:
         null_count = 0
         for col in out.columns:
@@ -116,14 +118,10 @@ def clean_dataframe(
             if null_count_before == 0:
                 continue
             series = out[col]
-            if pd.api.types.is_numeric_dtype(series):
-                out[col] = series.fillna(0)
-                null_count += null_count_before
-            elif pd.api.types.is_datetime64_any_dtype(series):
+            if pd.api.types.is_numeric_dtype(series) or pd.api.types.is_datetime64_any_dtype(series):
                 continue
-            else:
-                out[col] = series.fillna("")
-                null_count += null_count_before
+            out[col] = series.fillna("")
+            null_count += null_count_before
         report.nulos_preenchidos = null_count
 
     # 5. Text standardization: strip + `StringDtype`.
