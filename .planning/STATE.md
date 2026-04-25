@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 01-01-pyproject-uv-PLAN.md
-last_updated: "2026-04-25T00:21:18.280Z"
-last_activity: 2026-04-24 — Roadmap created; all 45 v1 requirements mapped to 6 phases.
+stopped_at: Completed 01-02-core-settings-PLAN.md
+last_updated: "2026-04-25T00:28:19Z"
+last_activity: 2026-04-25 — Completed 01-02 (Settings, security, structlog).
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
-  percent: 33
+  completed_plans: 2
+  percent: 67
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-24)
 ## Current Position
 
 Phase: 1 of 6 (Foundation)
-Plan: 1 of 3 in current phase
-Status: In progress (Phase 1 wave 1)
-Last activity: 2026-04-25 — Completed 01-01 (uv scaffold, Python 3.12 pin, all v1 deps locked).
+Plan: 2 of 3 in current phase
+Status: In progress (Phase 1 wave 2)
+Last activity: 2026-04-25 — Completed 01-02 (Settings via pydantic-settings, pwdlib+PyJWT helpers, structlog JSON logging).
 
-Progress: [███░░░░░░░] 33%
+Progress: [███████░░░] 67%
 
 ## Performance Metrics
 
@@ -53,6 +53,7 @@ Progress: [███░░░░░░░] 33%
 
 *Updated after each plan completion*
 | Phase 01 P01 | 6min | 2 tasks | 8 files |
+| Phase 01 P02 | 5min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,8 @@ Recent decisions affecting current work:
 - Foundation: Python 3.12 floor + <3.13 ceiling chosen to satisfy pandas 3.x (>=3.11) AND avoid pwdlib's Python 3.13 edge case.
 - Foundation: All Phase 2-5 runtime deps (pandas, duckdb, sqlglot, openai, charset-normalizer, altair, openpyxl) declared in pyproject.toml at Phase 1 — Docker image is final from Phase 1, no incremental rebuilds.
 - Foundation: aiosqlite + pydantic-settings added to pyproject.toml as Rule 2 deviations (plan rationale named them but the explicit dep list omitted them; required for D-06 Settings and async SQLite).
+- Foundation (01-02): JWT secret resolution caches at module level in security.py with `_reset_secret()` test hook — prevents ephemeral key rotation between encode/decode if `get_settings.cache_clear()` runs mid-test. Stable warning event name `jwt.ephemeral_key_generated` is the contract for test assertions.
+- Foundation (01-02): Task 3 (logging) committed before Task 2 (security) because security.py imports get_logger; reordering keeps every commit importable. Logical plan order is preserved in SUMMARY symbol listing — only commit timeline swapped.
 
 ### Pending Todos
 
@@ -87,6 +90,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-25T00:21:18.277Z
-Stopped at: Completed 01-01-pyproject-uv-PLAN.md
+Last session: 2026-04-25T00:28:19Z
+Stopped at: Completed 01-02-core-settings-PLAN.md
 Resume file: None

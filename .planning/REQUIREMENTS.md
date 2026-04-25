@@ -9,9 +9,9 @@ Requisitos para a entrega inicial. Cada um mapeia para uma fase do roadmap.
 
 ### Autenticação & Sessão
 
-- [ ] **AUTH-01**: Usuário pode criar conta com email e senha (senha hashada com `pwdlib[bcrypt]`)
-- [ ] **AUTH-02**: Usuário pode fazer login e receber token JWT de acesso
-- [ ] **AUTH-03**: Endpoints protegidos rejeitam requests sem token válido (401)
+- [x] **AUTH-01**: Usuário pode criar conta com email e senha (senha hashada com `pwdlib[bcrypt]`)
+- [x] **AUTH-02**: Usuário pode fazer login e receber token JWT de acesso
+- [x] **AUTH-03**: Endpoints protegidos rejeitam requests sem token válido (401)
 - [ ] **AUTH-04**: Cada sessão/upload é isolada por `user_id` — usuário A não acessa dados do usuário B
 - [ ] **AUTH-05**: Sessão one-shot com TTL: dataset vive em memória até 1h sem atividade, depois é expelido
 - [ ] **AUTH-06**: Background sweeper roda a cada 5 min e faz cleanup de sessões expiradas (libera memória)
@@ -146,9 +146,9 @@ Mapa de qual fase cobre qual requisito. Populado durante a criação do roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 1 | Pending |
-| AUTH-02 | Phase 1 | Pending |
-| AUTH-03 | Phase 1 | Pending |
+| AUTH-01 | Phase 1 | Foundation done (01-02) |
+| AUTH-02 | Phase 1 | Foundation done (01-02) |
+| AUTH-03 | Phase 1 | Foundation done (01-02) |
 | AUTH-04 | Phase 1 | Pending |
 | AUTH-05 | Phase 3 | Pending |
 | AUTH-06 | Phase 3 | Pending |
