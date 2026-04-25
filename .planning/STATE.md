@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: phase_3_shipped
-stopped_at: Phase 3 — DuckDB session + SQL lockdown shipped, 74/74 tests green
-last_updated: "2026-04-25T02:30:00Z"
-last_activity: 2026-04-25 — Phase 3 (DuckDB Session & Security) shipped. Hardened per-session DuckDB connection (external_access=false, autoload_known_extensions=false, lock_configuration=true — reenable attempt verified as failing), two-layer SQL validator (sqlglot AST + class-prefix + identifier blocklist), session store with lazy TTL expiry + background sweeper in lifespan, GET /sessions/{id} endpoint, cross-user isolation, auto-create session on upload completion. 74 tests green.
+status: phase_4_shipped
+stopped_at: Phase 4 — structured summary + LLM narration shipped, 89/89 tests green
+last_updated: "2026-04-25T02:50:00Z"
+last_activity: 2026-04-25 — Phase 4 (Structured Summary) shipped. DuckDB stats engine (per-column: numeric min/max/mean/median, datetime min/max, categorical top5; null_pct + unique everywhere), AsyncOpenAI wrapper with Pydantic structured output (`parse()` + NarrationResponse), OPS-03 structured log for every LLM call (provider, model, tokens_in/out, cost_estimated, latency_ms, session_id), cost table (gpt-4o-mini/4o/4.1 family), upload task result now includes `summary` with narration or narration_error when API key missing. Upload job refactored from executor-sync to asyncio-to-thread + native async for LLM. 89 tests green.
 progress:
   total_phases: 6
-  completed_phases: 3
-  total_plans: 10
-  completed_plans: 10
+  completed_phases: 4
+  total_plans: 11
+  completed_plans: 11
   percent: 100
 verification:
   phase_1:
@@ -27,6 +27,10 @@ verification:
     status: shipped
     tests_green: 74/74
     coverage_map: "SC#1 GET /sessions/{id} manifest — test_get_session_returns_schema_manifest; SC#2 SQL injection blocked — test_validator_rejects_io_and_lockdown_escapes + test_validator_rejects_non_select; SC#3 TTL sweeper — test_sweep_removes_expired + test_ttl_expiry_lazy_on_get; SC#4 two-user concurrency — test_two_users_concurrent; SC#5 cross-user 404 — test_user_b_cannot_access_user_a_session"
+  phase_4:
+    status: shipped
+    tests_green: 89/89
+    coverage_map: "SC#1 stats shape in task result — test_summary_columns_have_expected_shape + test_summary_included_without_api_key; SC#2 narration references actual data — test_summary_includes_narration_when_api_key_set (mocked OpenAI returning narration mentioning 'Sudeste' from real stats); SC#3 OPS-03 structured log — test_llm_call_emits_ops03_log verifies provider/model/tokens_in/tokens_out/cost_estimated/latency_ms/session_id all present"
 ---
 
 # Project State

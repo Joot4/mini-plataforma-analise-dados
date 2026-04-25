@@ -41,9 +41,9 @@ Requisitos para a entrega inicial. Cada um mapeia para uma fase do roadmap.
 
 ### Resumo automático
 
-- [ ] **SUM-01**: Após limpeza, gera stats estruturados: `{rows, cols, columns: [{alias, label, type, null_pct, unique, stats: {min/max/mean/median OR top5}}]}`
-- [ ] **SUM-02**: Gera narração em PT-BR (2-3 parágrafos) via LLM: descreve o dataset, destaca o que chama atenção, sinaliza flags de qualidade
-- [ ] **SUM-03**: Resumo completo é retornado em JSON pelo endpoint de status assim que o task termina
+- [x] **SUM-01**: Após limpeza, gera stats estruturados: `{rows, cols, columns: [{alias, label, type, null_pct, unique, stats: {min/max/mean/median OR top5}}]}`
+- [x] **SUM-02**: Gera narração em PT-BR (2-3 parágrafos) via LLM: descreve o dataset, destaca o que chama atenção, sinaliza flags de qualidade
+- [x] **SUM-03**: Resumo completo é retornado em JSON pelo endpoint de status assim que o task termina
 
 ### NL Query
 
@@ -75,7 +75,7 @@ Requisitos para a entrega inicial. Cada um mapeia para uma fase do roadmap.
 
 - [x] **OPS-01**: Background task usa `BackgroundTasks` do FastAPI + registry em memória (`dict[task_id → TaskStatus]`); endpoint `GET /tasks/{task_id}` retorna status `pending | running | done | error` + progresso + resultado quando pronto
 - [x] **OPS-02**: Arquivo uploadado é persistido em volume Docker `/data/uploads/{user_id}/{task_id}` durante o processamento; deletado ao fim da TTL da sessão
-- [ ] **OPS-03**: Log estruturado (JSON, stdout) de cada chamada LLM: `{provider, model, tokens_in, tokens_out, cost_estimated, latency_ms, session_id}`
+- [x] **OPS-03**: Log estruturado (JSON, stdout) de cada chamada LLM: `{provider, model, tokens_in, tokens_out, cost_estimated, latency_ms, session_id}`
 - [x] **OPS-04
 **: Docker Compose local com volume pra `/data` e `/db` (SQLite); sobe com `docker compose up` em <10s
 - [x] **OPS-05
@@ -165,9 +165,9 @@ Mapa de qual fase cobre qual requisito. Populado durante a criação do roadmap.
 | CLEAN-02 | Phase 2 | Done (02-shipped) |
 | CLEAN-03 | Phase 2 | Done (02-shipped) |
 | CLEAN-04 | Phase 2 | Done (02-shipped) |
-| SUM-01 | Phase 4 | Pending |
-| SUM-02 | Phase 4 | Pending |
-| SUM-03 | Phase 4 | Pending |
+| SUM-01 | Phase 4 | Done (04-shipped) |
+| SUM-02 | Phase 4 | Done (04-shipped) |
+| SUM-03 | Phase 4 | Done (04-shipped) |
 | NLQ-01 | Phase 5 | Pending |
 | NLQ-02 | Phase 5 | Pending |
 | NLQ-03 | Phase 5 | Pending |
@@ -185,7 +185,7 @@ Mapa de qual fase cobre qual requisito. Populado durante a criação do roadmap.
 | SQL-05 | Phase 3 | Done (03-shipped) |
 | OPS-01 | Phase 2 | Done (02-shipped) |
 | OPS-02 | Phase 2 | Done (02-shipped) |
-| OPS-03 | Phase 4 | Pending |
+| OPS-03 | Phase 4 | Done (04-shipped) |
 | OPS-04 | Phase 1 | Done (01-01) |
 | OPS-05 | Phase 1 | Done (01-01 image scaffold + 01-03 alembic stack) |
 | OPS-06 | Phase 1 | Done (01-01 + 01-03 alembic upgrade head wired) |
