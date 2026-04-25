@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: phase_1_verified
-stopped_at: Phase 1 PASSED — ready for Phase 2 planning
-last_updated: "2026-04-25T01:55:00Z"
-last_activity: 2026-04-25 — Phase 1 re-verified PASSED. All 5 ROADMAP success criteria met (register 201/409, login+401/200, cross-user isolation via /auth/me, compose up 11s + auto-migrations, image 386MB). pytest 10/10 green. See re-verification section in 01-VERIFICATION.md.
+status: phase_2_shipped
+stopped_at: Phase 2 — ingestion pipeline shipped, 33/33 tests green
+last_updated: "2026-04-25T02:10:00Z"
+last_activity: 2026-04-25 — Phase 2 (Ingestion & PT-BR locale) shipped. POST /upload + GET /upload/{task_id}/status live; PT-BR detector (encoding CP1252, delimiter `;`, number `1.234,56`, date DD/MM/YYYY), column normalization, cleaning pipeline (nulls/dupes/types/empty), in-memory task registry with cross-user isolation. 33 tests green (10 auth + 13 detector/service + 10 upload API).
 progress:
   total_phases: 6
-  completed_phases: 1
-  total_plans: 8
-  completed_plans: 8
+  completed_phases: 2
+  total_plans: 9
+  completed_plans: 9
   percent: 100
 verification:
   phase_1:
@@ -19,6 +19,10 @@ verification:
     score_plan_must_haves: 7/7
     report: .planning/phases/01-foundation/01-VERIFICATION.md
     reverified_at: "2026-04-25T01:55:00Z"
+  phase_2:
+    status: shipped
+    tests_green: 33/33
+    coverage_map: "SC#1 upload 202 — test_upload_returns_202_with_task_id; SC#2 413 oversize — test_oversize_file_returns_413; SC#3 CP1252+;+1.234,56 — test_ptbr_csv_full_roundtrip; SC#4 DD/MM/YYYY day>12 — test_ddmmyyyy_with_day_over_12; SC#5 done+report — test_status_shows_done_with_report"
 ---
 
 # Project State

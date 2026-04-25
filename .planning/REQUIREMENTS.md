@@ -18,26 +18,26 @@ Requisitos para a entrega inicial. Cada um mapeia para uma fase do roadmap.
 
 ### Ingestão
 
-- [ ] **INGEST-01**: Endpoint recebe upload `.csv` / `.xlsx` / `.tsv` via multipart e retorna `task_id` imediatamente
-- [ ] **INGEST-02**: Limite enforçado: rejeita (HTTP 413) arquivos > 50MB OU > 500k linhas com mensagem em PT-BR
-- [ ] **INGEST-03**: CSV — auto-detecta delimitador (`,` vs `;`) via sniffing na primeira linha
-- [ ] **INGEST-04**: CSV — auto-detecta encoding com ordem de tentativa: UTF-8 → CP1252 → Latin-1; fallback com `charset-normalizer`
-- [ ] **INGEST-05**: XLSX — lê primeira aba via openpyxl; ignora demais com warning no relatório
-- [ ] **INGEST-06**: Detecção de formato numérico PT-BR: se >60% dos valores de uma coluna casam com `^\d{1,3}(\.\d{3})*(,\d+)?$`, coluna é marcada PT-BR e convertida (remove `.` de milhar, troca `,` por `.`)
-- [ ] **INGEST-07**: Detecção de formato de data: default `dayfirst=True` (DD/MM/YYYY); `dateformat='%d/%m/%Y'` na carga DuckDB
-- [ ] **INGEST-08**: Nomes de coluna com acento/espaço/símbolos são normalizados para aliases ASCII snake_case (via `unicodedata.normalize('NFKD', ...)`); mapping `{alias → original}` é persistido no schema manifest da sessão
-- [ ] **INGEST-09**: Schema manifest da sessão guarda: colunas com nome original + alias + tipo detectado + 3-5 linhas de amostra
+- [x] **INGEST-01**: Endpoint recebe upload `.csv` / `.xlsx` / `.tsv` via multipart e retorna `task_id` imediatamente
+- [x] **INGEST-02**: Limite enforçado: rejeita (HTTP 413) arquivos > 50MB OU > 500k linhas com mensagem em PT-BR
+- [x] **INGEST-03**: CSV — auto-detecta delimitador (`,` vs `;`) via sniffing na primeira linha
+- [x] **INGEST-04**: CSV — auto-detecta encoding com ordem de tentativa: UTF-8 → CP1252 → Latin-1; fallback com `charset-normalizer`
+- [x] **INGEST-05**: XLSX — lê primeira aba via openpyxl; ignora demais com warning no relatório
+- [x] **INGEST-06**: Detecção de formato numérico PT-BR: se >60% dos valores de uma coluna casam com `^\d{1,3}(\.\d{3})*(,\d+)?$`, coluna é marcada PT-BR e convertida (remove `.` de milhar, troca `,` por `.`)
+- [x] **INGEST-07**: Detecção de formato de data: default `dayfirst=True` (DD/MM/YYYY); `dateformat='%d/%m/%Y'` na carga DuckDB
+- [x] **INGEST-08**: Nomes de coluna com acento/espaço/símbolos são normalizados para aliases ASCII snake_case (via `unicodedata.normalize('NFKD', ...)`); mapping `{alias → original}` é persistido no schema manifest da sessão
+- [x] **INGEST-09**: Schema manifest da sessão guarda: colunas com nome original + alias + tipo detectado + 3-5 linhas de amostra
 
 ### Limpeza
 
-- [ ] **CLEAN-01**: Pipeline de limpeza aplica 4 transformações com flags opcionais no request (default `true` em todas):
+- [x] **CLEAN-01**: Pipeline de limpeza aplica 4 transformações com flags opcionais no request (default `true` em todas):
   - Normalização de tipos (incluindo PT-BR números/datas)
   - Tratamento de nulos (preenche com `mean` em num, sentinela em texto, ou mantém NaN conforme config)
   - Remoção de duplicatas exatas
   - Padronização de texto (trim + lowercase em colunas categóricas)
-- [ ] **CLEAN-02**: Relatório de limpeza sempre retornado: `{nulos_preenchidos: N, duplicatas_removidas: M, tipos_convertidos: [...], colunas_pt_br_normalizadas: [...], textos_padronizados: [...]}`
-- [ ] **CLEAN-03**: Linhas/colunas 100% vazias são removidas silenciosamente (marcadas no relatório)
-- [ ] **CLEAN-04**: Pipeline usa pandas 3.0 com Copy-on-Write (só `.loc[]`, nada de chained assignment); string dtype é `StringDtype`, não `object`
+- [x] **CLEAN-02**: Relatório de limpeza sempre retornado: `{nulos_preenchidos: N, duplicatas_removidas: M, tipos_convertidos: [...], colunas_pt_br_normalizadas: [...], textos_padronizados: [...]}`
+- [x] **CLEAN-03**: Linhas/colunas 100% vazias são removidas silenciosamente (marcadas no relatório)
+- [x] **CLEAN-04**: Pipeline usa pandas 3.0 com Copy-on-Write (só `.loc[]`, nada de chained assignment); string dtype é `StringDtype`, não `object`
 
 ### Resumo automático
 
@@ -73,8 +73,8 @@ Requisitos para a entrega inicial. Cada um mapeia para uma fase do roadmap.
 
 ### Operações
 
-- [ ] **OPS-01**: Background task usa `BackgroundTasks` do FastAPI + registry em memória (`dict[task_id → TaskStatus]`); endpoint `GET /tasks/{task_id}` retorna status `pending | running | done | error` + progresso + resultado quando pronto
-- [ ] **OPS-02**: Arquivo uploadado é persistido em volume Docker `/data/uploads/{user_id}/{task_id}` durante o processamento; deletado ao fim da TTL da sessão
+- [x] **OPS-01**: Background task usa `BackgroundTasks` do FastAPI + registry em memória (`dict[task_id → TaskStatus]`); endpoint `GET /tasks/{task_id}` retorna status `pending | running | done | error` + progresso + resultado quando pronto
+- [x] **OPS-02**: Arquivo uploadado é persistido em volume Docker `/data/uploads/{user_id}/{task_id}` durante o processamento; deletado ao fim da TTL da sessão
 - [ ] **OPS-03**: Log estruturado (JSON, stdout) de cada chamada LLM: `{provider, model, tokens_in, tokens_out, cost_estimated, latency_ms, session_id}`
 - [x] **OPS-04
 **: Docker Compose local com volume pra `/data` e `/db` (SQLite); sobe com `docker compose up` em <10s
@@ -152,19 +152,19 @@ Mapa de qual fase cobre qual requisito. Populado durante a criação do roadmap.
 | AUTH-04 | Phase 1 | Foundation done (01-03 — User UUID4 PK + Settings-driven DB) |
 | AUTH-05 | Phase 3 | Pending |
 | AUTH-06 | Phase 3 | Pending |
-| INGEST-01 | Phase 2 | Pending |
-| INGEST-02 | Phase 2 | Pending |
-| INGEST-03 | Phase 2 | Pending |
-| INGEST-04 | Phase 2 | Pending |
-| INGEST-05 | Phase 2 | Pending |
-| INGEST-06 | Phase 2 | Pending |
-| INGEST-07 | Phase 2 | Pending |
-| INGEST-08 | Phase 2 | Pending |
-| INGEST-09 | Phase 2 | Pending |
-| CLEAN-01 | Phase 2 | Pending |
-| CLEAN-02 | Phase 2 | Pending |
-| CLEAN-03 | Phase 2 | Pending |
-| CLEAN-04 | Phase 2 | Pending |
+| INGEST-01 | Phase 2 | Done (02-shipped) |
+| INGEST-02 | Phase 2 | Done (02-shipped) |
+| INGEST-03 | Phase 2 | Done (02-shipped) |
+| INGEST-04 | Phase 2 | Done (02-shipped) |
+| INGEST-05 | Phase 2 | Done (02-shipped) |
+| INGEST-06 | Phase 2 | Done (02-shipped) |
+| INGEST-07 | Phase 2 | Done (02-shipped) |
+| INGEST-08 | Phase 2 | Done (02-shipped) |
+| INGEST-09 | Phase 2 | Done (02-shipped) |
+| CLEAN-01 | Phase 2 | Done (02-shipped) |
+| CLEAN-02 | Phase 2 | Done (02-shipped) |
+| CLEAN-03 | Phase 2 | Done (02-shipped) |
+| CLEAN-04 | Phase 2 | Done (02-shipped) |
 | SUM-01 | Phase 4 | Pending |
 | SUM-02 | Phase 4 | Pending |
 | SUM-03 | Phase 4 | Pending |
@@ -183,8 +183,8 @@ Mapa de qual fase cobre qual requisito. Populado durante a criação do roadmap.
 | SQL-03 | Phase 3 | Pending |
 | SQL-04 | Phase 3 | Pending |
 | SQL-05 | Phase 3 | Pending |
-| OPS-01 | Phase 2 | Pending |
-| OPS-02 | Phase 2 | Pending |
+| OPS-01 | Phase 2 | Done (02-shipped) |
+| OPS-02 | Phase 2 | Done (02-shipped) |
 | OPS-03 | Phase 4 | Pending |
 | OPS-04 | Phase 1 | Done (01-01) |
 | OPS-05 | Phase 1 | Done (01-01 image scaffold + 01-03 alembic stack) |
