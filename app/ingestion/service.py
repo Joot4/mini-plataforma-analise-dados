@@ -30,6 +30,11 @@ class SchemaManifest:
     row_count: int
     column_count: int
     original_columns: dict[str, str]  # alias -> original
+    # Preview of the first N rows for the UI. Kept separate from
+    # `ColumnSchema.sample_values` so the LLM context stays small.
+    preview: dict[str, object] = field(
+        default_factory=lambda: {"columns": [], "rows": []}
+    )
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -37,7 +42,27 @@ class SchemaManifest:
             "row_count": self.row_count,
             "column_count": self.column_count,
             "original_columns": self.original_columns,
+            "preview": self.preview,
         }
+
+
+PREVIEW_ROW_COUNT = 20
+
+
+def _build_preview(
+    df: pd.DataFrame, label_map: dict[str, str], n: int = PREVIEW_ROW_COUNT
+) -> dict[str, object]:
+    """First N rows of `df`, JSON-serializable, with original column labels."""
+    sliced = df.head(n).copy()
+    for col in sliced.columns:
+        s = sliced[col]
+        if pd.api.types.is_datetime64_any_dtype(s):
+            sliced[col] = s.dt.strftime("%Y-%m-%d %H:%M:%S").where(s.notna(), None)
+    sliced = sliced.astype(object).where(sliced.notna(), None)
+    return {
+        "columns": [label_map[a] for a in sliced.columns],
+        "rows": sliced.values.tolist(),
+    }
 
 
 @dataclass
@@ -91,6 +116,7 @@ def ingest_file(path: Path, options: CleaningOptions | None = None) -> IngestRes
         row_count=int(len(cleaned)),
         column_count=int(len(cleaned.columns)),
         original_columns=mapping,
+        preview=_build_preview(cleaned, mapping),
     )
 
     return IngestResult(

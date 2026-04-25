@@ -25,6 +25,9 @@ class SchemaManifestOut(BaseModel):
     row_count: int
     column_count: int
     original_columns: dict[str, str]
+    preview: dict[str, Any] = Field(
+        default_factory=lambda: {"columns": [], "rows": []}
+    )
 
 
 class CleaningReportOut(BaseModel):

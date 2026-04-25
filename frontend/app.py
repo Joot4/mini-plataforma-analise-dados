@@ -214,8 +214,20 @@ else:
             "Configure `OPENAI_API_KEY` para habilitar."
         )
 
+    # --- Data preview (first 20 rows) ---
+    schema_block = result.get("schema") or {}
+    preview = schema_block.get("preview") or {}
+    if preview.get("rows"):
+        st.subheader("👀 Visualização da planilha")
+        st.caption(
+            f"Primeiras {len(preview['rows'])} linhas (de "
+            f"{summary.get('rows', '?')}). Use a conversa abaixo pra explorar."
+        )
+        preview_df = pd.DataFrame(preview["rows"], columns=preview["columns"])
+        st.dataframe(preview_df, width="stretch", hide_index=True)
+
     # --- Cleaning report ---
-    with st.expander("🧹 Relatório de limpeza", expanded=True):
+    with st.expander("🧹 Relatório de limpeza", expanded=False):
         # Quick metrics — every transformation we counted.
         m1, m2, m3 = st.columns(3)
         m1.metric("Duplicatas removidas", cleaning.get("duplicatas_removidas", 0))
@@ -286,7 +298,7 @@ else:
         # Drop trailing zeros, cap at 4 decimal places.
         return f"{f:.4f}".rstrip("0").rstrip(".") or "0"
 
-    with st.expander("📐 Estatísticas por coluna", expanded=True):
+    with st.expander("📐 Estatísticas por coluna (detalhado)", expanded=False):
         rows = []
         for c in summary.get("columns", []):
             row: dict[str, str | int | float] = {
