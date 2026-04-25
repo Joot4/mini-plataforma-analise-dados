@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:1.7
-
 # --- Builder stage: resolve + install deps into a .venv ------------------------
 FROM python:3.12-slim AS builder
 
@@ -18,8 +16,7 @@ WORKDIR /app
 COPY pyproject.toml uv.lock .python-version ./
 
 # Install runtime deps into /opt/venv (no dev deps, no project code yet).
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev --no-install-project
+RUN uv sync --frozen --no-dev --no-install-project
 
 # --- Runtime stage: slim image with .venv + app code ---------------------------
 FROM python:3.12-slim AS runtime
