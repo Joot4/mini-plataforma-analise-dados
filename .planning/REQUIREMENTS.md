@@ -13,8 +13,8 @@ Requisitos para a entrega inicial. Cada um mapeia para uma fase do roadmap.
 - [x] **AUTH-02**: Usuário pode fazer login e receber token JWT de acesso
 - [x] **AUTH-03**: Endpoints protegidos rejeitam requests sem token válido (401)
 - [x] **AUTH-04**: Cada sessão/upload é isolada por `user_id` — usuário A não acessa dados do usuário B
-- [ ] **AUTH-05**: Sessão one-shot com TTL: dataset vive em memória até 1h sem atividade, depois é expelido
-- [ ] **AUTH-06**: Background sweeper roda a cada 5 min e faz cleanup de sessões expiradas (libera memória)
+- [x] **AUTH-05**: Sessão one-shot com TTL: dataset vive em memória até 1h sem atividade, depois é expelido
+- [x] **AUTH-06**: Background sweeper roda a cada 5 min e faz cleanup de sessões expiradas (libera memória)
 
 ### Ingestão
 
@@ -65,11 +65,11 @@ Requisitos para a entrega inicial. Cada um mapeia para uma fase do roadmap.
 
 ### Segurança SQL
 
-- [ ] **SQL-01**: SQL gerada pelo LLM passa por validação AST (`sqlglot.parse_one(..., read="duckdb")`): rejeita se não for `exp.Select`
-- [ ] **SQL-02**: Validação AST rejeita funções fora da whitelist (blocklist explícito: `read_csv`, `read_parquet`, `read_json`, `COPY`, `ATTACH`, `INSTALL`, `LOAD`, `pragma_*`, funções de I/O)
-- [ ] **SQL-03**: Cada sessão tem sua própria `duckdb.connect()` dedicada (não compartilhada entre requests/usuários)
-- [ ] **SQL-04**: Toda conexão DuckDB é hardened na criação: `SET enable_external_access = false; SET autoload_known_extensions = false; SET lock_configuration = true`
-- [ ] **SQL-05**: Queries pandas/DuckDB rodam em `run_in_executor` para não bloquear o event loop do FastAPI
+- [x] **SQL-01**: SQL gerada pelo LLM passa por validação AST (`sqlglot.parse_one(..., read="duckdb")`): rejeita se não for `exp.Select`
+- [x] **SQL-02**: Validação AST rejeita funções fora da whitelist (blocklist explícito: `read_csv`, `read_parquet`, `read_json`, `COPY`, `ATTACH`, `INSTALL`, `LOAD`, `pragma_*`, funções de I/O)
+- [x] **SQL-03**: Cada sessão tem sua própria `duckdb.connect()` dedicada (não compartilhada entre requests/usuários)
+- [x] **SQL-04**: Toda conexão DuckDB é hardened na criação: `SET enable_external_access = false; SET autoload_known_extensions = false; SET lock_configuration = true`
+- [x] **SQL-05**: Queries pandas/DuckDB rodam em `run_in_executor` para não bloquear o event loop do FastAPI
 
 ### Operações
 
@@ -150,8 +150,8 @@ Mapa de qual fase cobre qual requisito. Populado durante a criação do roadmap.
 | AUTH-02 | Phase 1 | Foundation done (01-02) |
 | AUTH-03 | Phase 1 | Foundation done (01-02) |
 | AUTH-04 | Phase 1 | Foundation done (01-03 — User UUID4 PK + Settings-driven DB) |
-| AUTH-05 | Phase 3 | Pending |
-| AUTH-06 | Phase 3 | Pending |
+| AUTH-05 | Phase 3 | Done (03-shipped) |
+| AUTH-06 | Phase 3 | Done (03-shipped) |
 | INGEST-01 | Phase 2 | Done (02-shipped) |
 | INGEST-02 | Phase 2 | Done (02-shipped) |
 | INGEST-03 | Phase 2 | Done (02-shipped) |
@@ -178,11 +178,11 @@ Mapa de qual fase cobre qual requisito. Populado durante a criação do roadmap.
 | NLQ-08 | Phase 5 | Pending |
 | NLQ-09 | Phase 5 | Pending |
 | NLQ-10 | Phase 5 | Pending |
-| SQL-01 | Phase 3 | Pending |
-| SQL-02 | Phase 3 | Pending |
-| SQL-03 | Phase 3 | Pending |
-| SQL-04 | Phase 3 | Pending |
-| SQL-05 | Phase 3 | Pending |
+| SQL-01 | Phase 3 | Done (03-shipped) |
+| SQL-02 | Phase 3 | Done (03-shipped) |
+| SQL-03 | Phase 3 | Done (03-shipped) |
+| SQL-04 | Phase 3 | Done (03-shipped) |
+| SQL-05 | Phase 3 | Done (03-shipped) |
 | OPS-01 | Phase 2 | Done (02-shipped) |
 | OPS-02 | Phase 2 | Done (02-shipped) |
 | OPS-03 | Phase 4 | Pending |
