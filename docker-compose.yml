@@ -1,0 +1,28 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mini-plataforma-analise-dados:local
+    container_name: mpad-api
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: sqlite+aiosqlite:////app/data/db/app.sqlite
+      UPLOADS_DIR: /app/data/uploads
+    ports:
+      - "8000:8000"
+    volumes:
+      - db-data:/app/data/db
+      - uploads-data:/app/data/uploads
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=2).status == 200 else 1)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+
+volumes:
+  db-data:
+  uploads-data:
