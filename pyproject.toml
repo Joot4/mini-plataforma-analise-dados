@@ -57,3 +57,8 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+markers = [
+    "slow: performance tests that process large fixtures or run full pipelines",
+]
+# Skip slow tests by default; run with `pytest -m slow` when validating SLAs.
+addopts = "-m 'not slow'"

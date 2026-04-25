@@ -73,3 +73,39 @@ def huge_row_count_csv(rows: int) -> bytes:
     header = "a,b,c\n"
     row = "1,2,3\n"
     return (header + row * rows).encode("utf-8")
+
+
+def realistic_ptbr_csv(rows: int, seed: int = 42) -> bytes:
+    """Build a realistic PT-BR CSV with all four locale vectors active:
+    CP1252 encoding, `;` delimiter, `1.234,56` numbers, DD/MM/YYYY dates.
+
+    Columns: Região, Produto, Preço (R$), Quantidade, Data Venda.
+    Uses a deterministic seed so performance tests are reproducible.
+    """
+    import random
+
+    rnd = random.Random(seed)
+    regions = ["Sudeste", "Sul", "Nordeste", "Norte", "Centro-Oeste"]
+    products = ["Arroz", "Feijão", "Açúcar", "Café", "Óleo", "Farinha", "Sal"]
+
+    def fmt_brl(v: float) -> str:
+        # Format 1234.56 → "1.234,56"
+        s = f"{v:,.2f}"  # "1,234.56" US style
+        return s.replace(",", "§").replace(".", ",").replace("§", ".")
+
+    lines = ["Região;Produto;Preço (R$);Quantidade;Data Venda"]
+    day_range = (1, 28)
+    month_range = (1, 12)
+    for _ in range(rows):
+        region = rnd.choice(regions)
+        product = rnd.choice(products)
+        price = rnd.uniform(5.0, 9999.99)
+        qty = rnd.randint(1, 500)
+        d = rnd.randint(*day_range)
+        m = rnd.randint(*month_range)
+        y = rnd.randint(2022, 2025)
+        lines.append(
+            f"{region};{product};{fmt_brl(price)};{qty};{d:02d}/{m:02d}/{y}"
+        )
+    text = "\n".join(lines) + "\n"
+    return text.encode("cp1252")

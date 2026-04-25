@@ -63,7 +63,10 @@ async def client(db_engine) -> AsyncIterator[AsyncClient]:
     app = create_app()
     app.dependency_overrides[get_db_session] = _override_get_db_session
 
-    transport = ASGITransport(app=app)
+    # raise_app_exceptions=False lets our generic Exception handler
+    # actually convert unhandled errors into 500 envelopes in tests — by default
+    # ASGITransport re-raises for debuggability, which masks the handler.
+    transport = ASGITransport(app=app, raise_app_exceptions=False)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
 
