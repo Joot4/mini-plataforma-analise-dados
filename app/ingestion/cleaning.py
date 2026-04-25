@@ -3,6 +3,7 @@
 All transforms use pandas 3.0 Copy-on-Write friendly patterns (`.loc[]` assignment
 only — no chained assignment). String dtype is `StringDtype`, never `object`.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -79,7 +80,8 @@ def clean_dataframe(
     if opts.convert_types:
         for col in out.columns:
             series = out[col]
-            if not pd.api.types.is_object_dtype(series) and not pd.api.types.is_string_dtype(series):
+            is_strish = pd.api.types.is_object_dtype(series) or pd.api.types.is_string_dtype(series)
+            if not is_strish:
                 continue
             if is_ptbr_number_series(series):
                 out[col] = parse_ptbr_number_series(series)

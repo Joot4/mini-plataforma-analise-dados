@@ -8,6 +8,7 @@ Or via docker compose:
 
 Talks to the backend at MPAD_API (default http://localhost:8000/api/v1).
 """
+
 from __future__ import annotations
 
 import os
@@ -104,9 +105,7 @@ with st.sidebar:
 
 # --- Main ---
 st.title("📊 Mini Plataforma de Análise de Dados")
-st.caption(
-    "Envie uma planilha (CSV/TSV/XLSX) em PT-BR e faça perguntas em linguagem natural."
-)
+st.caption("Envie uma planilha (CSV/TSV/XLSX) em PT-BR e faça perguntas em linguagem natural.")
 
 if not st.session_state.token:
     st.info("👈 Use o painel à esquerda para entrar ou criar uma conta.")
@@ -146,9 +145,7 @@ if st.session_state.session_id is None:
             while time.time() < deadline:
                 time.sleep(0.5)
                 with api() as c:
-                    s = c.get(
-                        f"/upload/{task_id}/status", headers=auth_headers()
-                    )
+                    s = c.get(f"/upload/{task_id}/status", headers=auth_headers())
                 body = s.json()
                 progress_bar.progress(
                     min(float(body.get("progress", 0.0)), 1.0),
@@ -252,9 +249,7 @@ else:
                 row["max"] = c.get("max")
             else:
                 top = c.get("top5", [])
-                row["top"] = ", ".join(
-                    f"{t['value']} ({t['freq']})" for t in top[:3]
-                )
+                row["top"] = ", ".join(f"{t['value']} ({t['freq']})" for t in top[:3])
             rows.append(row)
         if rows:
             st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
@@ -265,7 +260,11 @@ else:
     # `messages` is a local mirror of the server-side conversation history.
     # We prime it from the session's GET payload on first render so a page
     # reload doesn't lose the visible history.
-    if "messages" not in st.session_state or st.session_state.get("_mirrored_session") != st.session_state.session_id:
+    needs_mirror = (
+        "messages" not in st.session_state
+        or st.session_state.get("_mirrored_session") != st.session_state.session_id
+    )
+    if needs_mirror:
         st.session_state.messages = []
         st.session_state._mirrored_session = st.session_state.session_id
         try:
@@ -276,9 +275,7 @@ else:
                 )
             if sr.status_code == 200:
                 for t in sr.json().get("history", []):
-                    st.session_state.messages.append(
-                        {"role": "user", "content": t["question"]}
-                    )
+                    st.session_state.messages.append({"role": "user", "content": t["question"]})
                     st.session_state.messages.append(
                         {
                             "role": "assistant",
@@ -295,9 +292,7 @@ else:
     with hdr_col:
         st.header("2. Conversa sobre os dados")
     with reset_col:
-        if st.session_state.messages and st.button(
-            "🧹 Limpar conversa", use_container_width=True
-        ):
+        if st.session_state.messages and st.button("🧹 Limpar conversa", use_container_width=True):
             with api() as c:
                 c.delete(
                     f"/sessions/{st.session_state.session_id}/conversation",
@@ -307,9 +302,7 @@ else:
             st.session_state.last_query = None
             st.rerun()
 
-    st.caption(
-        "💡 Follow-ups funcionam: depois de \"total de vendas?\", pergunte \"e por região?\"."
-    )
+    st.caption('💡 Follow-ups funcionam: depois de "total de vendas?", pergunte "e por região?".')
 
     # Render history.
     for msg in st.session_state.messages:
@@ -327,7 +320,7 @@ else:
     # gets a bigger view than inside the chat bubble. Older turns show only SQL.
     lq = st.session_state.last_query
     if lq:
-        with st.expander(f"📊 Resultado da última pergunta", expanded=True):
+        with st.expander("📊 Resultado da última pergunta", expanded=True):
             tab_table, tab_chart, tab_sql = st.tabs(["Tabela", "Gráfico", "SQL"])
             with tab_table:
                 table = lq["table"]
@@ -359,9 +352,7 @@ else:
         with st.chat_message("user"):
             st.write(question)
         with st.chat_message("assistant"):
-            with st.spinner(
-                "Analisando (classificando → gerando SQL → executando → narrando)..."
-            ):
+            with st.spinner("Analisando (classificando → gerando SQL → executando → narrando)..."):
                 with api() as c:
                     r = c.post(
                         f"/sessions/{st.session_state.session_id}/query",
@@ -388,6 +379,4 @@ else:
                     f"{body.get('message', 'Falha na consulta.')}"
                 )
                 st.error(err)
-                st.session_state.messages.append(
-                    {"role": "assistant", "content": err}
-                )
+                st.session_state.messages.append({"role": "assistant", "content": err})

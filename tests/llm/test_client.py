@@ -2,6 +2,7 @@
 required fields (provider, model, tokens_in, tokens_out, cost_estimated,
 latency_ms, session_id).
 """
+
 from __future__ import annotations
 
 import json
@@ -27,9 +28,7 @@ class _FakeCompletions:
     async def parse(self, **kwargs):
         self.last_kwargs = kwargs
         choice = SimpleNamespace(message=SimpleNamespace(parsed=self._parsed))
-        usage = SimpleNamespace(
-            prompt_tokens=self._tokens_in, completion_tokens=self._tokens_out
-        )
+        usage = SimpleNamespace(prompt_tokens=self._tokens_in, completion_tokens=self._tokens_out)
         return SimpleNamespace(choices=[choice], usage=usage)
 
 

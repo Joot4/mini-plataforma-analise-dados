@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import threading
-import time
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pandas as pd
 import pytest
@@ -53,7 +52,7 @@ def test_ttl_expiry_lazy_on_get(df: pd.DataFrame) -> None:
     store = SessionStore(ttl_seconds=1)
     rec = store.create(user_id="u1", df=df, schema=_manifest(df))
     # Force expiry by backdating last_accessed_at.
-    rec.last_accessed_at = datetime.now(tz=timezone.utc) - timedelta(seconds=5)
+    rec.last_accessed_at = datetime.now(tz=UTC) - timedelta(seconds=5)
     assert store.get(rec.session_id, "u1") is None
     assert store.size() == 0
 
@@ -63,7 +62,7 @@ def test_sweep_removes_expired(df: pd.DataFrame) -> None:
     r1 = store.create(user_id="u1", df=df, schema=_manifest(df))
     r2 = store.create(user_id="u1", df=df, schema=_manifest(df))
     # Only r1 is expired.
-    r1.last_accessed_at = datetime.now(tz=timezone.utc) - timedelta(seconds=10)
+    r1.last_accessed_at = datetime.now(tz=UTC) - timedelta(seconds=10)
     removed = store.sweep()
     assert removed == 1
     assert store.size() == 1
@@ -81,9 +80,7 @@ def test_two_users_concurrent(df: pd.DataFrame) -> None:
 
     def hammer(rec, expected_sum):
         for _ in range(50):
-            got = rec.connection.execute(
-                f"SELECT SUM(a) FROM {SESSION_TABLE_NAME}"
-            ).fetchone()
+            got = rec.connection.execute(f"SELECT SUM(a) FROM {SESSION_TABLE_NAME}").fetchone()
             if got != (expected_sum,):
                 errors.append(AssertionError(f"expected {expected_sum}, got {got}"))
 

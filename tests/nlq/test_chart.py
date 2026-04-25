@@ -6,10 +6,12 @@ from app.nlq.chart import build_chart_spec
 
 
 def test_datetime_plus_numeric_gives_line() -> None:
-    df = pd.DataFrame({
-        "data": pd.to_datetime(["2024-01-01", "2024-02-01", "2024-03-01"]),
-        "vendas": [100, 150, 200],
-    })
+    df = pd.DataFrame(
+        {
+            "data": pd.to_datetime(["2024-01-01", "2024-02-01", "2024-03-01"]),
+            "vendas": [100, 150, 200],
+        }
+    )
     spec = build_chart_spec(df)
     assert spec is not None
     assert spec["mark"] == "line"
@@ -20,10 +22,12 @@ def test_datetime_plus_numeric_gives_line() -> None:
 
 
 def test_categorical_plus_numeric_gives_bar() -> None:
-    df = pd.DataFrame({
-        "regiao": ["Sul", "Norte", "Sudeste"],
-        "total": [100, 200, 500],
-    })
+    df = pd.DataFrame(
+        {
+            "regiao": ["Sul", "Norte", "Sudeste"],
+            "total": [100, 200, 500],
+        }
+    )
     spec = build_chart_spec(df)
     assert spec is not None
     assert spec["mark"] == "bar"
@@ -46,10 +50,12 @@ def test_empty_df_returns_none() -> None:
 
 
 def test_chart_spec_has_data_values() -> None:
-    df = pd.DataFrame({
-        "regiao": ["Sul", "Norte"],
-        "total": [100.0, 200.0],
-    })
+    df = pd.DataFrame(
+        {
+            "regiao": ["Sul", "Norte"],
+            "total": [100.0, 200.0],
+        }
+    )
     spec = build_chart_spec(df)
     assert spec is not None
     # Data embedded for client-side render.
@@ -61,10 +67,12 @@ def test_chart_spec_has_data_values() -> None:
 def test_chart_spec_nan_serialized_safely() -> None:
     import math
 
-    df = pd.DataFrame({
-        "regiao": ["Sul", "Norte"],
-        "total": [100.0, float("nan")],
-    })
+    df = pd.DataFrame(
+        {
+            "regiao": ["Sul", "Norte"],
+            "total": [100.0, float("nan")],
+        }
+    )
     spec = build_chart_spec(df)
     assert spec is not None
     for v in spec["data"]["values"]:

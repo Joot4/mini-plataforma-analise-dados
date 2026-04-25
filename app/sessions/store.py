@@ -11,12 +11,13 @@ Access policy:
 - Expired sessions are removed lazily on access and also by the background
   sweeper (see `sweeper.py`).
 """
+
 from __future__ import annotations
 
 import threading
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import duckdb
@@ -46,11 +47,11 @@ class ConversationTurn:
     """One user question + the assistant's answer on a session."""
 
     question: str
-    text: str           # narration shown to the user
+    text: str  # narration shown to the user
     sql: str
     row_count: int
     truncated: bool = False
-    asked_at: datetime = field(default_factory=lambda: datetime.now(tz=timezone.utc))
+    asked_at: datetime = field(default_factory=lambda: datetime.now(tz=UTC))
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -70,14 +71,12 @@ class SessionRecord:
     connection: duckdb.DuckDBPyConnection
     schema: SchemaManifest
     table_name: str = SESSION_TABLE_NAME
-    created_at: datetime = field(default_factory=lambda: datetime.now(tz=timezone.utc))
-    last_accessed_at: datetime = field(
-        default_factory=lambda: datetime.now(tz=timezone.utc)
-    )
+    created_at: datetime = field(default_factory=lambda: datetime.now(tz=UTC))
+    last_accessed_at: datetime = field(default_factory=lambda: datetime.now(tz=UTC))
     history: list[ConversationTurn] = field(default_factory=list)
 
     def touch(self) -> None:
-        self.last_accessed_at = datetime.now(tz=timezone.utc)
+        self.last_accessed_at = datetime.now(tz=UTC)
 
     def close(self) -> None:
         try:
@@ -86,7 +85,7 @@ class SessionRecord:
             logger.warning("session.close_failed", session_id=self.session_id)
 
     def is_expired(self, ttl_seconds: int, now: datetime | None = None) -> bool:
-        now = now or datetime.now(tz=timezone.utc)
+        now = now or datetime.now(tz=UTC)
         return (now - self.last_accessed_at) > timedelta(seconds=ttl_seconds)
 
     def append_turn(self, turn: ConversationTurn) -> None:
@@ -166,7 +165,7 @@ class SessionStore:
 
     def sweep(self, *, now: datetime | None = None) -> int:
         """Remove and close all expired sessions. Returns how many were removed."""
-        now = now or datetime.now(tz=timezone.utc)
+        now = now or datetime.now(tz=UTC)
         expired: list[SessionRecord] = []
         with self._lock:
             for sid in list(self._store.keys()):
@@ -203,9 +202,7 @@ def get_session_store() -> SessionStore:
             if _store_singleton is None:
                 from app.core.config import get_settings
 
-                _store_singleton = SessionStore(
-                    ttl_seconds=get_settings().SESSION_TTL_SECONDS
-                )
+                _store_singleton = SessionStore(ttl_seconds=get_settings().SESSION_TTL_SECONDS)
     return _store_singleton
 
 

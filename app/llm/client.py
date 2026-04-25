@@ -6,6 +6,7 @@ Every call here:
 - Uses Pydantic response_format so the caller always receives a typed model.
 - Swallows nothing — any failure bubbles up so the caller can decide on fallback.
 """
+
 from __future__ import annotations
 
 import time
@@ -42,7 +43,7 @@ def reset_openai_client() -> None:
     _client_singleton = None
 
 
-async def parse_structured(
+async def parse_structured[ResponseT: BaseModel](
     *,
     model: str,
     messages: list[dict[str, str]],

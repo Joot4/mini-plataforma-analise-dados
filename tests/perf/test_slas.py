@@ -6,6 +6,7 @@ Marked `slow` — excluded by default. Run explicitly:
 PERF-01: 80k-line PT-BR CSV → upload → clean → stats in ≤30s.
 PERF-02: NL query on loaded session → full response in ≤10s.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -16,7 +17,7 @@ import time
 import pytest
 from httpx import AsyncClient
 
-from app.schemas.nlq import ClassifyResponse, NarrationOut, SQLResponse
+from app.schemas.nlq import ClassifyResponse, SQLResponse
 from tests.fixtures.ptbr_data import realistic_ptbr_csv
 
 API = "/api/v1"
@@ -99,7 +100,9 @@ async def test_nlq_pipeline_under_10s(client: AsyncClient, monkeypatch) -> None:
     async def fast_classify(question, schema, session_id=None, history=None):
         return ClassifyResponse(on_topic=True, reason="ok")
 
-    async def fast_generate(question, schema, *, retry_reason=None, previous_sql=None, session_id=None, history=None):
+    async def fast_generate(
+        question, schema, *, retry_reason=None, previous_sql=None, session_id=None, history=None
+    ):
         return SQLResponse(
             sql="SELECT regiao, SUM(quantidade) AS total FROM dados GROUP BY regiao",
             reasoning="soma por regiao",

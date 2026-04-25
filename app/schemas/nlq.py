@@ -4,7 +4,6 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-
 # --- LLM structured-output schemas (sent to OpenAI as response_format) ---
 
 

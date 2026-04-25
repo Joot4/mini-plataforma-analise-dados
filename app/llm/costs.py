@@ -3,6 +3,7 @@
 Source: OpenAI public pricing (2025-10 snapshot). When a new model is introduced,
 add a row here; unknown models fall back to zero cost (logged but not estimated).
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass

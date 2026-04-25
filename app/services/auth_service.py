@@ -32,9 +32,7 @@ async def register_user(session: AsyncSession, email: str, plain_password: str) 
     return user
 
 
-async def authenticate_user(
-    session: AsyncSession, email: str, plain_password: str
-) -> User | None:
+async def authenticate_user(session: AsyncSession, email: str, plain_password: str) -> User | None:
     """Return the User if credentials are valid and the user is active, else None."""
     stmt = select(User).where(User.email == email.lower().strip())
     result = await session.execute(stmt)

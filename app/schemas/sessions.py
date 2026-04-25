@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from app.schemas.upload import ColumnSchemaOut, SchemaManifestOut  # noqa: F401 re-export
 from pydantic import BaseModel
+
+from app.schemas.upload import ColumnSchemaOut, SchemaManifestOut  # noqa: F401 re-export
 
 
 class ConversationTurnOut(BaseModel):

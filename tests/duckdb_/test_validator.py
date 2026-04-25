@@ -8,7 +8,6 @@ from app.duckdb_.validator import (
     validate_sql_or_raise,
 )
 
-
 # --- Allowed SELECTs ---
 
 

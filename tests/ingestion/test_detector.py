@@ -12,12 +12,11 @@ from app.ingestion.detector import (
     parse_ptbr_number_series,
 )
 
-
 # --- Encoding ---
 
 
 def test_detects_utf8() -> None:
-    assert detect_encoding("Região".encode("utf-8")) == "utf-8"
+    assert detect_encoding("Região".encode()) == "utf-8"
 
 
 def test_detects_cp1252() -> None:
@@ -29,7 +28,7 @@ def test_detects_cp1252() -> None:
 
 
 def test_detects_utf8_sig_bom() -> None:
-    raw = b"\xef\xbb\xbf" + "Nome".encode("utf-8")
+    raw = b"\xef\xbb\xbf" + b"Nome"
     assert detect_encoding(raw) == "utf-8-sig"
 
 

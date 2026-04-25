@@ -3,6 +3,7 @@
 Per NLQ-03, the prompt NEVER includes the full dataset — only aliases, dtypes,
 and 3-5 sample values per column. This bounds both prompt cost and PII leakage.
 """
+
 from __future__ import annotations
 
 import json
@@ -51,7 +52,7 @@ def _build_schema_block(schema: SchemaManifest) -> str:
     )
 
 
-def _history_block(history: "list[ConversationTurn] | None") -> str:
+def _history_block(history: list[ConversationTurn] | None) -> str:
     """Compact serialization of prior turns — each turn shows the question,
     the SQL that answered it, and a one-liner describing the outcome."""
     if not history:
@@ -59,7 +60,7 @@ def _history_block(history: "list[ConversationTurn] | None") -> str:
     lines: list[str] = []
     for i, t in enumerate(history):
         lines.append(
-            f"Turno {i+1}:\n"
+            f"Turno {i + 1}:\n"
             f"  Pergunta: {t.question}\n"
             f"  SQL: {t.sql}\n"
             f"  Resposta resumida: {t.text}"
@@ -74,7 +75,7 @@ async def generate_sql(
     retry_reason: str | None = None,
     previous_sql: str | None = None,
     session_id: str | None = None,
-    history: "list[ConversationTurn] | None" = None,
+    history: list[ConversationTurn] | None = None,
 ) -> SQLResponse:
     """Generate one DuckDB SELECT. `retry_reason` + `previous_sql` reinject the
     validator's complaint so the model can correct itself on retry.

@@ -2,6 +2,7 @@
 response bodies. Every error path must return a structured envelope with a
 Portuguese `message` and a stable `error_type`.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -53,7 +54,7 @@ def _assert_envelope(body: dict) -> None:
     # No leaks:
     forbidden = [
         "Traceback",
-        "File \"",
+        'File "',
         "AssertionError",
         "TypeError",
         "ValueError",
@@ -77,14 +78,18 @@ async def test_auth_401_envelope(client: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_register_409_envelope(client: AsyncClient) -> None:
     await client.post(f"{API}/auth/register", json={"email": "dup@example.com", "password": _PW})
-    r = await client.post(f"{API}/auth/register", json={"email": "dup@example.com", "password": _PW})
+    r = await client.post(
+        f"{API}/auth/register", json={"email": "dup@example.com", "password": _PW}
+    )
     assert r.status_code == 409
     _assert_envelope(r.json())
 
 
 @pytest.mark.asyncio
 async def test_validation_error_envelope(client: AsyncClient) -> None:
-    r = await client.post(f"{API}/auth/register", json={"email": "not-an-email", "password": "short"})
+    r = await client.post(
+        f"{API}/auth/register", json={"email": "not-an-email", "password": "short"}
+    )
     assert r.status_code == 422
     body = r.json()
     _assert_envelope(body)
@@ -106,9 +111,7 @@ async def test_bad_upload_format_envelope(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_execution_failure_returns_envelope(
-    client: AsyncClient, monkeypatch
-) -> None:
+async def test_execution_failure_returns_envelope(client: AsyncClient, monkeypatch) -> None:
     """LLM returns valid-looking SELECT that references a non-existent column.
     DuckDB will raise — the endpoint must map it to an `execution_failed`
     envelope, NOT leak the raw DuckDB error text.
@@ -118,7 +121,9 @@ async def test_execution_failure_returns_envelope(
     async def fake_classify(question, schema, session_id=None, history=None):
         return ClassifyResponse(on_topic=True, reason="ok")
 
-    async def fake_generate(question, schema, *, retry_reason=None, previous_sql=None, session_id=None, history=None):
+    async def fake_generate(
+        question, schema, *, retry_reason=None, previous_sql=None, session_id=None, history=None
+    ):
         return SQLResponse(sql="SELECT coluna_inexistente FROM dados", reasoning="-")
 
     monkeypatch.setattr("app.nlq.service.classify_question", fake_classify)
@@ -144,7 +149,9 @@ async def test_invalid_question_envelope(client: AsyncClient, monkeypatch) -> No
     async def fake_classify(question, schema, session_id=None, history=None):
         return ClassifyResponse(on_topic=True, reason="ok")
 
-    async def always_invalid(question, schema, *, retry_reason=None, previous_sql=None, session_id=None, history=None):
+    async def always_invalid(
+        question, schema, *, retry_reason=None, previous_sql=None, session_id=None, history=None
+    ):
         return SQLResponse(sql="DROP TABLE dados", reasoning="-")
 
     monkeypatch.setattr("app.nlq.service.classify_question", fake_classify)

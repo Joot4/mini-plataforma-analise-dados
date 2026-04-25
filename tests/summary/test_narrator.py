@@ -53,9 +53,7 @@ async def test_generate_narration_uses_structured_client(monkeypatch, stats) -> 
 
     async def fake_parse(**kwargs):
         captured.update(kwargs)
-        return NarrationResponse(
-            narration="O dataset tem 123 linhas em 2 colunas. " * 3
-        )
+        return NarrationResponse(narration="O dataset tem 123 linhas em 2 colunas. " * 3)
 
     monkeypatch.setattr("app.summary.narrator.parse_structured", fake_parse)
 

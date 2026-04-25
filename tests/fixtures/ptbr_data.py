@@ -8,6 +8,7 @@ Generates in-memory CSV/XLSX bytes with real-world BR quirks baked in:
 - Accented column names
 - Blank rows + duplicate rows for the cleaning pipeline to remove
 """
+
 from __future__ import annotations
 
 from io import BytesIO
@@ -41,11 +42,7 @@ def ptbr_csv_cp1252_semicolon() -> bytes:
 
 def ptbr_csv_utf8_comma() -> bytes:
     """Standard UTF-8 comma-separated CSV — the 'easy' case."""
-    text = (
-        "name,email,age\n"
-        "Alice,alice@example.com,30\n"
-        "Bob,bob@example.com,25\n"
-    )
+    text = "name,email,age\nAlice,alice@example.com,30\nBob,bob@example.com,25\n"
     return text.encode("utf-8")
 
 
@@ -104,8 +101,6 @@ def realistic_ptbr_csv(rows: int, seed: int = 42) -> bytes:
         d = rnd.randint(*day_range)
         m = rnd.randint(*month_range)
         y = rnd.randint(2022, 2025)
-        lines.append(
-            f"{region};{product};{fmt_brl(price)};{qty};{d:02d}/{m:02d}/{y}"
-        )
+        lines.append(f"{region};{product};{fmt_brl(price)};{qty};{d:02d}/{m:02d}/{y}")
     text = "\n".join(lines) + "\n"
     return text.encode("cp1252")

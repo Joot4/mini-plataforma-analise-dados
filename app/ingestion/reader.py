@@ -3,6 +3,7 @@
 All paths return (DataFrame, load_metadata) where load_metadata records which
 format/encoding/delimiter was used so the cleaning report can surface it.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -51,9 +52,7 @@ def load_file(path: Path) -> LoadResult:
         return _load_xlsx(path)
     if suffix in {".csv", ".tsv"}:
         return _load_delimited(path, forced_delim="\t" if suffix == ".tsv" else None)
-    raise UnsupportedFormatError(
-        f"Formato não suportado: {suffix}. Use .csv, .tsv ou .xlsx."
-    )
+    raise UnsupportedFormatError(f"Formato não suportado: {suffix}. Use .csv, .tsv ou .xlsx.")
 
 
 def _load_delimited(path: Path, forced_delim: str | None = None) -> LoadResult:

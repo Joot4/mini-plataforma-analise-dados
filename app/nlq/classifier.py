@@ -4,6 +4,7 @@ Keeps a short PT-BR prompt — the system message pins the persona (analista
 brasileiro) and the user message includes only schema aliases + dtypes (not
 sample rows, to keep the classifier cheap and fast).
 """
+
 from __future__ import annotations
 
 import json
@@ -30,10 +31,7 @@ SYSTEM = (
 
 
 def _schema_summary(schema: SchemaManifest) -> str:
-    cols = [
-        {"alias": c.alias, "label": c.original_name, "dtype": c.dtype}
-        for c in schema.columns
-    ]
+    cols = [{"alias": c.alias, "label": c.original_name, "dtype": c.dtype} for c in schema.columns]
     return json.dumps(
         {"rows": schema.row_count, "columns": cols},
         ensure_ascii=False,
@@ -41,12 +39,11 @@ def _schema_summary(schema: SchemaManifest) -> str:
     )
 
 
-def _history_block(history: "list[ConversationTurn] | None") -> str:
+def _history_block(history: list[ConversationTurn] | None) -> str:
     if not history:
         return "(sem histórico)"
     lines = [
-        f"{i+1}. Pergunta: {t.question}\n   Resposta: {t.text}"
-        for i, t in enumerate(history)
+        f"{i + 1}. Pergunta: {t.question}\n   Resposta: {t.text}" for i, t in enumerate(history)
     ]
     return "\n".join(lines)
 
@@ -55,7 +52,7 @@ async def classify_question(
     question: str,
     schema: SchemaManifest,
     session_id: str | None = None,
-    history: "list[ConversationTurn] | None" = None,
+    history: list[ConversationTurn] | None = None,
 ) -> ClassifyResponse:
     settings = get_settings()
     user_content = (

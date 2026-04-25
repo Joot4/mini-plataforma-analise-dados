@@ -3,6 +3,7 @@
 Keeps a reversible mapping {alias → original_name} so the LLM sees ASCII-safe
 identifiers while the UI can show the user's original labels.
 """
+
 from __future__ import annotations
 
 import re

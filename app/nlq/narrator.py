@@ -1,4 +1,5 @@
 """Narrate a single query result in 1-3 PT-BR sentences."""
+
 from __future__ import annotations
 
 import json
@@ -25,7 +26,7 @@ async def narrate_result(
     sql: str,
     table: TableOut,
     session_id: str | None = None,
-    history: "list[ConversationTurn] | None" = None,
+    history: list[ConversationTurn] | None = None,
 ) -> str:
     settings = get_settings()
     # Cap the table sent to the LLM: at most 20 rows is enough context for
@@ -37,9 +38,7 @@ async def narrate_result(
         "resultado": {"columns": table.columns, "rows": truncated_rows},
     }
     if history:
-        payload["historico"] = [
-            {"pergunta": t.question, "resposta": t.text} for t in history
-        ]
+        payload["historico"] = [{"pergunta": t.question, "resposta": t.text} for t in history]
     out = await parse_structured(
         model=settings.OPENAI_MODEL,
         messages=[

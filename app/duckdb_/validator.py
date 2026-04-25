@@ -12,13 +12,13 @@ Layer 2: walk every Anonymous/Function/Table node in the Select tree; if the
 CLAUDE.md non-negotiable: this is the first of the two layers that protect the
 LLM-generated SQL; the second layer is the lockdown on the connection itself.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 
 import sqlglot
 from sqlglot import exp
-
 
 # Blocklist of function/table identifiers that must never appear inside a Select.
 # Case-insensitive; comparison is done on lowercased names.

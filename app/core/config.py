@@ -46,5 +46,5 @@ class Settings(BaseSettings):
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
-    """Singleton accessor. Cache is cleared by calling get_settings.cache_clear() (used in tests)."""
+    """Singleton accessor. Tests call get_settings.cache_clear() to refresh."""
     return Settings()  # type: ignore[call-arg]

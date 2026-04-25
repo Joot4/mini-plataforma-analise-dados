@@ -11,8 +11,7 @@ from app.summary.stats import compute_stats
 def _manifest(df: pd.DataFrame, types: dict[str, str] | None = None) -> SchemaManifest:
     types = types or {c: str(df[c].dtype) for c in df.columns}
     cols = [
-        ColumnSchema(alias=c, original_name=c, dtype=types[c], sample_values=[])
-        for c in df.columns
+        ColumnSchema(alias=c, original_name=c, dtype=types[c], sample_values=[]) for c in df.columns
     ]
     return SchemaManifest(
         columns=cols,

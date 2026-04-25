@@ -6,7 +6,6 @@ import time
 import pytest
 from httpx import AsyncClient
 
-from app.schemas.summary import NarrationResponse
 from tests.fixtures.ptbr_data import (
     huge_row_count_csv,
     ptbr_csv_cp1252_semicolon,
@@ -229,9 +228,7 @@ async def test_user_b_cannot_see_user_a_task(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_summary_included_without_api_key(
-    client: AsyncClient, monkeypatch
-) -> None:
+async def test_summary_included_without_api_key(client: AsyncClient, monkeypatch) -> None:
     """Without OPENAI_API_KEY, summary still carries stats — only narration is skipped."""
     # Explicitly clear any key inherited from .env.
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)

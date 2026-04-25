@@ -11,6 +11,7 @@ Background worker (runs via `loop.run_in_executor` to keep pandas/openpyxl off t
 event loop) calls `ingest_file`, updates the task record, and removes the raw file
 on success. On failure, the file is kept for debugging and the error is recorded.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -65,9 +66,7 @@ def _uploads_dir_for(user_id: str) -> Path:
     return user_dir
 
 
-async def _stream_to_disk(
-    upload: UploadFile, destination: Path, max_bytes: int
-) -> int:
+async def _stream_to_disk(upload: UploadFile, destination: Path, max_bytes: int) -> int:
     """Write the upload to disk in chunks, raising 413 if the byte cap is exceeded."""
     total = 0
     chunk_size = 64 * 1024
@@ -84,9 +83,7 @@ async def _stream_to_disk(
     return total
 
 
-def _ingest_and_session_sync(
-    user_id: str, file_path: Path, max_rows: int
-):
+def _ingest_and_session_sync(user_id: str, file_path: Path, max_rows: int):
     """Sync slice of the job: read file → clean → register DuckDB session → stats.
 
     Runs inside a thread because pandas + DuckDB are sync/CPU-bound. Returns
@@ -108,9 +105,7 @@ class _TooManyRowsError(Exception):
     """Internal signal — caller maps it to the `too_many_rows` error envelope."""
 
 
-async def _run_ingest_async(
-    task_id: str, user_id: str, file_path: Path, max_rows: int
-) -> None:
+async def _run_ingest_async(task_id: str, user_id: str, file_path: Path, max_rows: int) -> None:
     registry = get_task_registry()
     registry.update(task_id, status=TaskStatus.RUNNING, progress=0.1)
     try:
@@ -118,9 +113,7 @@ async def _run_ingest_async(
             _ingest_and_session_sync, user_id, file_path, max_rows
         )
     except _TooManyRowsError:
-        registry.update(
-            task_id, status=TaskStatus.ERROR, progress=1.0, error=_TOO_MANY_ROWS
-        )
+        registry.update(task_id, status=TaskStatus.ERROR, progress=1.0, error=_TOO_MANY_ROWS)
         return
     except (UnsupportedFormatError, SingleColumnError, EmptyFileError) as exc:
         registry.update(
@@ -160,9 +153,7 @@ async def _run_ingest_async(
         summary["narration_error"] = "OPENAI_API_KEY não configurada."
 
     response["summary"] = summary
-    registry.update(
-        task_id, status=TaskStatus.DONE, progress=1.0, result=response
-    )
+    registry.update(task_id, status=TaskStatus.DONE, progress=1.0, result=response)
     file_path.unlink(missing_ok=True)
 
 
@@ -175,7 +166,7 @@ async def _run_ingest_async(
 async def upload_file(
     current_user: CurrentUser,
     background: BackgroundTasks,
-    file: UploadFile = File(...),
+    file: UploadFile = File(...),  # noqa: B008 — FastAPI's standard pattern
 ) -> UploadAcceptedResponse:
     settings = get_settings()
 

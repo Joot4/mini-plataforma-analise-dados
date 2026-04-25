@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import secrets
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Final
 
 import jwt
@@ -78,8 +78,10 @@ class TokenPayload(BaseModel):
 def create_access_token(subject: str, expires_minutes: int | None = None) -> str:
     """Sign a JWT access token for the given subject (user_id)."""
     settings = get_settings()
-    minutes = expires_minutes if expires_minutes is not None else settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
-    now = datetime.now(tz=timezone.utc)
+    minutes = (
+        expires_minutes if expires_minutes is not None else settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+    )
+    now = datetime.now(tz=UTC)
     exp = now + timedelta(minutes=minutes)
     payload: dict[str, int | str] = {
         "sub": subject,

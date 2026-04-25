@@ -7,7 +7,7 @@ import secrets
 import pytest
 from httpx import AsyncClient
 
-from app.schemas.nlq import ClassifyResponse, NarrationOut, SQLResponse
+from app.schemas.nlq import ClassifyResponse, SQLResponse
 from tests.fixtures.ptbr_data import ptbr_csv_cp1252_semicolon
 
 API = "/api/v1"
@@ -47,12 +47,11 @@ async def test_query_requires_auth(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_query_without_api_key_returns_503(
-    client: AsyncClient, monkeypatch
-) -> None:
+async def test_query_without_api_key_returns_503(client: AsyncClient, monkeypatch) -> None:
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.setenv("OPENAI_API_KEY", "")
     from app.core.config import get_settings
+
     get_settings.cache_clear()
     token = await _login(client, "nlq-nokey@example.com")
     session_id = await _upload_and_session(client, token)
@@ -66,17 +65,17 @@ async def test_query_without_api_key_returns_503(
 
 
 @pytest.mark.asyncio
-async def test_happy_path_returns_table_and_chart(
-    client: AsyncClient, monkeypatch
-) -> None:
+async def test_happy_path_returns_table_and_chart(client: AsyncClient, monkeypatch) -> None:
     monkeypatch.setenv("OPENAI_API_KEY", _FAKE_KEY)
 
     async def fake_classify(question, schema, session_id=None, history=None):
         return ClassifyResponse(on_topic=True, reason="sobre vendas")
 
-    async def fake_generate(question, schema, *, retry_reason=None, previous_sql=None, session_id=None, history=None):
+    async def fake_generate(
+        question, schema, *, retry_reason=None, previous_sql=None, session_id=None, history=None
+    ):
         return SQLResponse(
-            sql='SELECT regiao, SUM(preco_r) AS total FROM dados GROUP BY regiao',
+            sql="SELECT regiao, SUM(preco_r) AS total FROM dados GROUP BY regiao",
             reasoning="soma por regiao",
         )
 

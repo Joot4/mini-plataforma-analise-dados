@@ -7,6 +7,7 @@ Design:
   the full dataset (PITFALLS.md#9).
 - Response is Pydantic-parsed via `parse()` so we always get `{narration: str}`.
 """
+
 from __future__ import annotations
 
 import json

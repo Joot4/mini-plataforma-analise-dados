@@ -1,4 +1,5 @@
 """Session endpoints: schema manifest, conversation history, reset."""
+
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, status

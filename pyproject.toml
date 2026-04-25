@@ -49,7 +49,9 @@ select = ["E", "W", "F", "I", "B", "UP"]
 ignore = []
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["B"]
+# Long signatures + canned LLM payloads are easier to read in one line
+# inside tests; B (bugbear) gets noisy on intentional patterns.
+"tests/**" = ["B", "E501"]
 
 [tool.mypy]
 python_version = "3.12"

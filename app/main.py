@@ -55,9 +55,7 @@ async def _http_exception_handler(request: Request, exc: HTTPException) -> JSONR
         body = _envelope(
             error_type=str(exc.detail["error_type"]),
             message=str(exc.detail["message"]),
-            details=ErrorDetails(**exc.detail["details"])
-            if exc.detail.get("details")
-            else None,
+            details=ErrorDetails(**exc.detail["details"]) if exc.detail.get("details") else None,
         )
     else:
         body = _envelope(error_type="http_error", message=str(exc.detail))

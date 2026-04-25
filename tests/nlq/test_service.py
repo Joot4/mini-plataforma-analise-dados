@@ -2,6 +2,7 @@
 DuckDB session. Validates classify → gen → validate → exec → narrate → chart
 + the retry path + the error envelopes for off-topic / invalid-question.
 """
+
 from __future__ import annotations
 
 import pandas as pd
@@ -10,15 +11,14 @@ import pytest
 from app.ingestion.service import ColumnSchema, SchemaManifest
 from app.nlq import service as nlq_service
 from app.nlq.service import NLQError, answer_question
-from app.schemas.nlq import ClassifyResponse, NarrationOut, SQLResponse
+from app.schemas.nlq import ClassifyResponse, SQLResponse
 from app.sessions.store import SESSION_TABLE_NAME, SessionStore
 
 
 def _manifest(df: pd.DataFrame, types: dict[str, str] | None = None) -> SchemaManifest:
     types = types or {c: str(df[c].dtype) for c in df.columns}
     cols = [
-        ColumnSchema(alias=c, original_name=c, dtype=types[c], sample_values=[])
-        for c in df.columns
+        ColumnSchema(alias=c, original_name=c, dtype=types[c], sample_values=[]) for c in df.columns
     ]
     return SchemaManifest(
         columns=cols,
@@ -30,17 +30,23 @@ def _manifest(df: pd.DataFrame, types: dict[str, str] | None = None) -> SchemaMa
 
 @pytest.fixture
 def session():
-    df = pd.DataFrame({
-        "regiao": ["Sul", "Norte", "Sul", "Sudeste", "Sul"],
-        "vendas": [100.0, 200.0, 150.0, 500.0, 80.0],
-    })
+    df = pd.DataFrame(
+        {
+            "regiao": ["Sul", "Norte", "Sul", "Sudeste", "Sul"],
+            "vendas": [100.0, 200.0, 150.0, 500.0, 80.0],
+        }
+    )
     store = SessionStore(ttl_seconds=3600)
-    rec = store.create(user_id="u1", df=df, schema=_manifest(df, {"regiao": "string", "vendas": "float64"}))
+    rec = store.create(
+        user_id="u1", df=df, schema=_manifest(df, {"regiao": "string", "vendas": "float64"})
+    )
     yield rec
     rec.close()
 
 
-def _patch_llm(monkeypatch, *, on_topic: bool, sql: str, narration: str, retry_sql: str | None = None):
+def _patch_llm(
+    monkeypatch, *, on_topic: bool, sql: str, narration: str, retry_sql: str | None = None
+):
     """Monkeypatch classifier / sql-generator / narrator with canned responses."""
     calls = {"generate_sql": 0}
 
@@ -48,8 +54,13 @@ def _patch_llm(monkeypatch, *, on_topic: bool, sql: str, narration: str, retry_s
         return ClassifyResponse(on_topic=on_topic, reason="ok")
 
     async def fake_generate(
-        question, schema, *, retry_reason=None, previous_sql=None,
-        session_id=None, history=None,
+        question,
+        schema,
+        *,
+        retry_reason=None,
+        previous_sql=None,
+        session_id=None,
+        history=None,
     ):
         calls["generate_sql"] += 1
         if calls["generate_sql"] == 1:

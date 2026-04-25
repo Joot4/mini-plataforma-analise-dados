@@ -3,6 +3,7 @@
 `ingest_file(path)` runs the full pipeline: load → normalize columns → clean →
 produce schema manifest + cleaning report + metadata.
 """
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
@@ -80,9 +81,7 @@ def ingest_file(path: Path, options: CleaningOptions | None = None) -> IngestRes
             alias=alias,
             original_name=mapping[alias],
             dtype=str(cleaned[alias].dtype),
-            sample_values=[
-                None if pd.isna(v) else str(v) for v in sample_rows[alias].tolist()
-            ],
+            sample_values=[None if pd.isna(v) else str(v) for v in sample_rows[alias].tolist()],
         )
         for alias in cleaned.columns
     ]

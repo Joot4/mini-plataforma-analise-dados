@@ -9,6 +9,7 @@ Heuristic (NLQ-09):
 Emits a Vega-Lite v5/v6-compatible dict via Altair's `to_dict()` so the frontend
 can render it directly with any Vega-Lite runtime (vega-embed, etc.).
 """
+
 from __future__ import annotations
 
 import math
@@ -52,8 +53,10 @@ def _sanitize_for_json(df: pd.DataFrame) -> pd.DataFrame:
         if pd.api.types.is_datetime64_any_dtype(s):
             out[col] = s.dt.strftime("%Y-%m-%dT%H:%M:%S").where(s.notna(), None)
         elif pd.api.types.is_float_dtype(s):
-            out[col] = s.where(s.notna(), None).astype(object).map(
-                lambda v: None if (isinstance(v, float) and math.isnan(v)) else v
+            out[col] = (
+                s.where(s.notna(), None)
+                .astype(object)
+                .map(lambda v: None if (isinstance(v, float) and math.isnan(v)) else v)
             )
     return out
 
@@ -68,18 +71,24 @@ def build_chart_spec(df: pd.DataFrame) -> dict[str, Any] | None:
 
     if kinds["datetime"] and kinds["numeric"]:
         x, y = kinds["datetime"][0], kinds["numeric"][0]
-        chart = alt.Chart(sdf).mark_line().encode(
-            x=alt.X(f"{x}:T", title=x), y=alt.Y(f"{y}:Q", title=y)
+        chart = (
+            alt.Chart(sdf)
+            .mark_line()
+            .encode(x=alt.X(f"{x}:T", title=x), y=alt.Y(f"{y}:Q", title=y))
         )
     elif kinds["categorical"] and kinds["numeric"]:
         x, y = kinds["categorical"][0], kinds["numeric"][0]
-        chart = alt.Chart(sdf).mark_bar().encode(
-            x=alt.X(f"{x}:N", title=x, sort="-y"), y=alt.Y(f"{y}:Q", title=y)
+        chart = (
+            alt.Chart(sdf)
+            .mark_bar()
+            .encode(x=alt.X(f"{x}:N", title=x, sort="-y"), y=alt.Y(f"{y}:Q", title=y))
         )
     elif len(kinds["numeric"]) >= 2:
         x, y = kinds["numeric"][0], kinds["numeric"][1]
-        chart = alt.Chart(sdf).mark_point().encode(
-            x=alt.X(f"{x}:Q", title=x), y=alt.Y(f"{y}:Q", title=y)
+        chart = (
+            alt.Chart(sdf)
+            .mark_point()
+            .encode(x=alt.X(f"{x}:Q", title=x), y=alt.Y(f"{y}:Q", title=y))
         )
     else:
         return None

@@ -13,6 +13,7 @@ Flow:
 All LLM calls flow through `parse_structured` so OPS-03 logs happen automatically.
 DuckDB execution runs in a worker thread (SQL-05 — never block the event loop).
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -61,8 +62,10 @@ def _df_to_table(df: pd.DataFrame) -> TableOut:
         if pd.api.types.is_datetime64_any_dtype(s):
             cleaned[col] = s.dt.strftime("%Y-%m-%dT%H:%M:%S").where(s.notna(), None)
         elif pd.api.types.is_float_dtype(s):
-            cleaned[col] = s.where(s.notna(), None).astype(object).map(
-                lambda v: None if (isinstance(v, float) and math.isnan(v)) else v
+            cleaned[col] = (
+                s.where(s.notna(), None)
+                .astype(object)
+                .map(lambda v: None if (isinstance(v, float) and math.isnan(v)) else v)
             )
     rows: list[list[Any]] = cleaned.astype(object).where(cleaned.notna(), None).values.tolist()
     return TableOut(columns=list(cleaned.columns), rows=rows, truncated=truncated)

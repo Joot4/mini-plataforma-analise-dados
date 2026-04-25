@@ -12,6 +12,7 @@ is closed. NEVER use `duckdb.connect()` directly elsewhere in the app.
 
 CLAUDE.md non-negotiable: connections are per-session and never shared.
 """
+
 from __future__ import annotations
 
 import duckdb
@@ -40,6 +41,4 @@ def create_hardened_connection() -> duckdb.DuckDBPyConnection:
         return con  # expected path — lockdown is in effect
     else:
         con.close()
-        raise LockdownError(
-            "Lockdown não aplicou: enable_external_access pôde ser reativado."
-        )
+        raise LockdownError("Lockdown não aplicou: enable_external_access pôde ser reativado.")

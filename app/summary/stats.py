@@ -9,6 +9,7 @@ Identifiers are double-quoted to survive alias edge cases; values are parameter-
 bound where possible, otherwise the column name is quoted in-place (column names
 are already ASCII snake_case aliases post-normalization — safe for quoting).
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -45,7 +46,9 @@ class ColumnStats:
             "unique": self.unique,
         }
         if self.kind == "numeric":
-            base.update({"min": self.min, "max": self.max, "mean": self.mean, "median": self.median})
+            base.update(
+                {"min": self.min, "max": self.max, "mean": self.mean, "median": self.median}
+            )
         elif self.kind == "datetime":
             base.update({"min": self.min, "max": self.max})
         else:
@@ -114,9 +117,7 @@ def compute_stats(
             cs.mean = None if stats_row[2] is None else round(float(stats_row[2]), 4)
             cs.median = None if stats_row[3] is None else float(stats_row[3])
         elif kind == "datetime" and rows > 0:
-            dt_row = conn.execute(
-                f'SELECT MIN({quoted}), MAX({quoted}) FROM "{table}"'
-            ).fetchone()
+            dt_row = conn.execute(f'SELECT MIN({quoted}), MAX({quoted}) FROM "{table}"').fetchone()
             cs.min = None if dt_row[0] is None else str(dt_row[0])
             cs.max = None if dt_row[1] is None else str(dt_row[1])
         else:
@@ -125,10 +126,7 @@ def compute_stats(
                 f'FROM "{table}" WHERE {quoted} IS NOT NULL '
                 "GROUP BY v ORDER BY freq DESC LIMIT 5"
             ).fetchall()
-            cs.top5 = [
-                {"value": "" if v is None else str(v), "freq": int(f)}
-                for v, f in top_rows
-            ]
+            cs.top5 = [{"value": "" if v is None else str(v), "freq": int(f)} for v, f in top_rows]
 
         col_stats.append(cs)
 

@@ -21,9 +21,7 @@ engine: AsyncEngine = create_async_engine(
     echo=settings.DEBUG,
     future=True,
     # SQLite-specific: allow same thread checks to relax (aiosqlite handles concurrency).
-    connect_args={"check_same_thread": False}
-    if settings.DATABASE_URL.startswith("sqlite")
-    else {},
+    connect_args={"check_same_thread": False} if settings.DATABASE_URL.startswith("sqlite") else {},
 )
 
 AsyncSessionLocal: async_sessionmaker[AsyncSession] = async_sessionmaker(

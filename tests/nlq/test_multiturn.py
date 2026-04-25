@@ -7,6 +7,7 @@ Verifies:
 - GET /sessions/{id} returns the history.
 - DELETE /sessions/{id}/conversation clears it.
 """
+
 from __future__ import annotations
 
 import os
@@ -30,23 +31,29 @@ _FAKE_KEY = "sk-" + secrets.token_hex(16)
 
 def _manifest(df, types=None):
     types = types or {c: str(df[c].dtype) for c in df.columns}
-    cols = [ColumnSchema(alias=c, original_name=c, dtype=types[c], sample_values=[])
-            for c in df.columns]
+    cols = [
+        ColumnSchema(alias=c, original_name=c, dtype=types[c], sample_values=[]) for c in df.columns
+    ]
     return SchemaManifest(
-        columns=cols, row_count=len(df), column_count=len(df.columns),
+        columns=cols,
+        row_count=len(df),
+        column_count=len(df.columns),
         original_columns={c: c for c in df.columns},
     )
 
 
 @pytest.fixture
 def session():
-    df = pd.DataFrame({
-        "regiao": ["Sul", "Norte", "Sul", "Sudeste"],
-        "vendas": [100.0, 200.0, 150.0, 500.0],
-    })
+    df = pd.DataFrame(
+        {
+            "regiao": ["Sul", "Norte", "Sul", "Sudeste"],
+            "vendas": [100.0, 200.0, 150.0, 500.0],
+        }
+    )
     store = SessionStore(ttl_seconds=3600)
     rec = store.create(
-        user_id="u1", df=df,
+        user_id="u1",
+        df=df,
         schema=_manifest(df, {"regiao": "string", "vendas": "float64"}),
     )
     yield rec
@@ -58,8 +65,12 @@ async def test_successful_turn_is_appended_to_history(session, monkeypatch) -> N
     async def fake_classify(q, s, session_id=None, history=None):
         return ClassifyResponse(on_topic=True, reason="ok")
 
-    async def fake_gen(q, s, *, retry_reason=None, previous_sql=None, session_id=None, history=None):
-        return SQLResponse(sql=f"SELECT SUM(vendas) AS total FROM {SESSION_TABLE_NAME}", reasoning="-")
+    async def fake_gen(
+        q, s, *, retry_reason=None, previous_sql=None, session_id=None, history=None
+    ):
+        return SQLResponse(
+            sql=f"SELECT SUM(vendas) AS total FROM {SESSION_TABLE_NAME}", reasoning="-"
+        )
 
     async def fake_narrate(q, sql, table, session_id=None, history=None):
         return "O total é 950."
@@ -87,9 +98,14 @@ async def test_second_turn_receives_history_in_prompts(session, monkeypatch) -> 
         captured["classify"].append(list(history or []))
         return ClassifyResponse(on_topic=True, reason="ok")
 
-    async def fake_gen(q, s, *, retry_reason=None, previous_sql=None, session_id=None, history=None):
+    async def fake_gen(
+        q, s, *, retry_reason=None, previous_sql=None, session_id=None, history=None
+    ):
         captured["generate"].append(list(history or []))
-        return SQLResponse(sql=f"SELECT regiao, SUM(vendas) AS total FROM {SESSION_TABLE_NAME} GROUP BY regiao", reasoning="-")
+        return SQLResponse(
+            sql=f"SELECT regiao, SUM(vendas) AS total FROM {SESSION_TABLE_NAME} GROUP BY regiao",
+            reasoning="-",
+        )
 
     async def fake_narrate(q, sql, table, session_id=None, history=None):
         captured["narrate"].append(list(history or []))
@@ -124,7 +140,9 @@ async def test_history_capped_at_max_turns(session, monkeypatch) -> None:
         captured.append(len(history or []))
         return ClassifyResponse(on_topic=True, reason="ok")
 
-    async def fake_gen(q, s, *, retry_reason=None, previous_sql=None, session_id=None, history=None):
+    async def fake_gen(
+        q, s, *, retry_reason=None, previous_sql=None, session_id=None, history=None
+    ):
         return SQLResponse(sql=f"SELECT COUNT(*) FROM {SESSION_TABLE_NAME}", reasoning="-")
 
     async def fake_narrate(q, sql, table, session_id=None, history=None):
@@ -152,6 +170,7 @@ async def _login(client, email):
 
 async def _session_id(client, token):
     import asyncio
+
     r = await client.post(
         f"{API}/upload",
         files={"file": ("u.csv", ptbr_csv_utf8_comma(), "text/csv")},

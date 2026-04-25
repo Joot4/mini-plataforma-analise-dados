@@ -3,17 +3,18 @@
 Baseline for Phase 2 (OPS-01). Phase 3 may swap this for a Redis-backed store if
 multi-worker horizontal scale is needed — the interface here is deliberately small.
 """
+
 from __future__ import annotations
 
 import threading
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Any
 
 
-class TaskStatus(str, Enum):
+class TaskStatus(StrEnum):
     PENDING = "pending"
     RUNNING = "running"
     DONE = "done"
@@ -25,8 +26,8 @@ class TaskRecord:
     task_id: str
     user_id: str
     status: TaskStatus = TaskStatus.PENDING
-    created_at: datetime = field(default_factory=lambda: datetime.now(tz=timezone.utc))
-    updated_at: datetime = field(default_factory=lambda: datetime.now(tz=timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(tz=UTC))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(tz=UTC))
     progress: float = 0.0  # 0.0 – 1.0
     result: dict[str, Any] | None = None
     error: dict[str, str] | None = None
@@ -86,7 +87,7 @@ class TaskRegistry:
                 record.result = result
             if error is not None:
                 record.error = error
-            record.updated_at = datetime.now(tz=timezone.utc)
+            record.updated_at = datetime.now(tz=UTC)
             return record
 
     def owned_by(self, task_id: str, user_id: str) -> TaskRecord | None:

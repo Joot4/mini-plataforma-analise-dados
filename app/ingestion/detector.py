@@ -4,6 +4,7 @@ Every function here runs on bytes/Series samples and never reads full files —
 the caller is responsible for sampling and slicing. This keeps the functions
 cheap to unit-test and lets the reader orchestrate IO.
 """
+
 from __future__ import annotations
 
 import csv

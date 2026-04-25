@@ -1,4 +1,5 @@
 """POST /sessions/{session_id}/query — the core NL-to-insight endpoint."""
+
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
