@@ -30,6 +30,8 @@ from app.ingestion.reader import (
 from app.ingestion.service import ingest_file
 from app.schemas.upload import TaskStatusResponse, UploadAcceptedResponse
 from app.sessions.store import get_session_store
+from app.summary.narrator import generate_narration
+from app.summary.stats import compute_stats
 from app.tasks.registry import TaskStatus, get_task_registry
 
 router = APIRouter(prefix="/upload", tags=["upload"])
@@ -82,34 +84,44 @@ async def _stream_to_disk(
     return total
 
 
-def _run_ingest_job(
+def _ingest_and_session_sync(
+    user_id: str, file_path: Path, max_rows: int
+):
+    """Sync slice of the job: read file → clean → register DuckDB session → stats.
+
+    Runs inside a thread because pandas + DuckDB are sync/CPU-bound. Returns
+    (response_dict, session_id, stats) or raises; the async wrapper handles
+    registry updates and the async LLM call.
+    """
+    result = ingest_file(file_path, options=CleaningOptions())
+    if result.raw_row_count > max_rows:
+        raise _TooManyRowsError()
+    store = get_session_store()
+    session = store.create(user_id=user_id, df=result.df, schema=result.schema)
+    stats = compute_stats(session.connection, session.table_name, session.schema)
+    response = result.to_response()
+    response["session_id"] = session.session_id
+    return response, session.session_id, stats
+
+
+class _TooManyRowsError(Exception):
+    """Internal signal — caller maps it to the `too_many_rows` error envelope."""
+
+
+async def _run_ingest_async(
     task_id: str, user_id: str, file_path: Path, max_rows: int
 ) -> None:
-    """Executed inside a thread pool by BackgroundTasks → loop.run_in_executor."""
     registry = get_task_registry()
     registry.update(task_id, status=TaskStatus.RUNNING, progress=0.1)
     try:
-        result = ingest_file(file_path, options=CleaningOptions())
-        if result.raw_row_count > max_rows:
-            registry.update(
-                task_id,
-                status=TaskStatus.ERROR,
-                progress=1.0,
-                error=_TOO_MANY_ROWS,
-            )
-            return
-        # Materialize into an isolated DuckDB session.
-        store = get_session_store()
-        session = store.create(user_id=user_id, df=result.df, schema=result.schema)
-        response = result.to_response()
-        response["session_id"] = session.session_id
-        registry.update(
-            task_id,
-            status=TaskStatus.DONE,
-            progress=1.0,
-            result=response,
+        response, session_id, stats = await asyncio.to_thread(
+            _ingest_and_session_sync, user_id, file_path, max_rows
         )
-        file_path.unlink(missing_ok=True)
+    except _TooManyRowsError:
+        registry.update(
+            task_id, status=TaskStatus.ERROR, progress=1.0, error=_TOO_MANY_ROWS
+        )
+        return
     except (UnsupportedFormatError, SingleColumnError, EmptyFileError) as exc:
         registry.update(
             task_id,
@@ -117,6 +129,7 @@ def _run_ingest_job(
             progress=1.0,
             error={"error_type": "ingestion_failed", "message": str(exc)},
         )
+        return
     except Exception as exc:
         logger.error("ingest.unhandled", exc_info=exc, task_id=task_id)
         registry.update(
@@ -128,15 +141,29 @@ def _run_ingest_job(
                 "message": "Falha inesperada no processamento.",
             },
         )
+        return
 
+    # Stats are deterministic and always present.
+    summary: dict = {**stats.to_dict(), "narration": None, "narration_error": None}
 
-async def _run_ingest_async(
-    task_id: str, user_id: str, file_path: Path, max_rows: int
-) -> None:
-    loop = asyncio.get_running_loop()
-    await loop.run_in_executor(
-        None, _run_ingest_job, task_id, user_id, file_path, max_rows
+    # Narration is best-effort: missing API key or transient failure must not
+    # cascade into a task error — we return the stats and flag the narration.
+    settings = get_settings()
+    if settings.OPENAI_API_KEY:
+        try:
+            summary["narration"] = await generate_narration(stats, session_id=session_id)
+            registry.update(task_id, progress=0.8)
+        except Exception as exc:
+            logger.warning("summary.narration_failed", exc_info=exc, session_id=session_id)
+            summary["narration_error"] = str(exc)
+    else:
+        summary["narration_error"] = "OPENAI_API_KEY não configurada."
+
+    response["summary"] = summary
+    registry.update(
+        task_id, status=TaskStatus.DONE, progress=1.0, result=response
     )
+    file_path.unlink(missing_ok=True)
 
 
 @router.post(

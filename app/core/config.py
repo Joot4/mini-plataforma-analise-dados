@@ -37,6 +37,7 @@ class Settings(BaseSettings):
 
     # --- OpenAI (Phase 4 consumes) ---
     OPENAI_API_KEY: str | None = None
+    OPENAI_MODEL: str = "gpt-4o-mini"
 
     # --- App ---
     DEBUG: bool = False
