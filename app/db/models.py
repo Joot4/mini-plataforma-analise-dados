@@ -20,10 +20,11 @@ class User(Base):
     __tablename__ = "users"
 
     # UUID4 PK — never sequential integers (PITFALLS.md#11 — enumeration attack prevention).
-    # Stored as String(36) on SQLite (SQLite has no native UUID type; SQLAlchemy serializes
-    # uuid.UUID -> string). Future Postgres migration becomes PG_UUID(as_uuid=True) — trivial.
-    id: Mapped[uuid.UUID] = mapped_column(
-        String(36), primary_key=True, default=uuid.uuid4
+    # Stored as String(36) on SQLite (no native UUID type; aiosqlite cannot bind UUID instances,
+    # so the column type AND default both produce str). Future Postgres migration becomes
+    # PG_UUID(as_uuid=True) — trivial.
+    id: Mapped[str] = mapped_column(
+        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
     )
     email: Mapped[str] = mapped_column(
         String(255), unique=True, index=True, nullable=False
