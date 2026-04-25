@@ -248,3 +248,57 @@ Once those land, ALL five ROADMAP success criteria become testable, and the phas
 
 _Verified: 2026-04-25T00:50:00Z_
 _Verifier: Claude (gsd-verifier)_
+
+---
+
+## Re-verification (2026-04-25T01:55:00Z)
+
+All 5 gaps flagged in the initial pass are now closed. Plans 01-04..08 shipped (commits `f3ade3c`, `055a1d8`, `cf3ca47`, `4583863`, `71f12bd`, `0f06ba5`, `66d09ec`). Evidence below was collected against the live codebase, not trusted from agent summaries.
+
+### Plan-level must-haves (previously 7/7 — re-checked)
+
+| Check | Evidence | Verdict |
+|-------|----------|---------|
+| `uv sync --frozen` clean | `Audited 83 packages` | PASS |
+| Python 3.12 pinned | `.python-version` = `3.12` | PASS |
+| `passlib` absent | `grep -r passlib app/ pyproject.toml` empty | PASS |
+| `python-jose` absent | `grep -r python-jose app/ pyproject.toml` empty | PASS |
+| No `print(` in `app/` | `grep -r 'print(' app/` empty | PASS |
+| Settings env override | verified in plan 02 + respected in `conftest.py` | PASS |
+| structlog JSON logger | `app/core/logging.py:38` `JSONRenderer()` | PASS |
+
+### ROADMAP Phase 1 Success Criteria — previously 0/5
+
+| # | Criterion | Evidence | Verdict |
+|---|-----------|----------|---------|
+| SC#1 | Register 201 + duplicate 409 | `test_register_returns_201_and_user_payload`, `test_duplicate_email_returns_409` — both PASS in `uv run pytest tests/` | PASS |
+| SC#2 | Login + protected 401/200 | `test_login_returns_token_and_me_works`, `test_login_wrong_password_returns_401`, `test_me_without_token_returns_401`, `test_me_with_garbage_token_returns_401` — 4 tests PASS | PASS |
+| SC#3 | Cross-user isolation | `test_cross_user_isolation` — registers A+B, asserts each token resolves to its own user, ids differ — PASS | PASS |
+| SC#4 | `docker compose up` <10s + auto-migrations | `mpad-api Up 11 seconds (healthy)` observed; `CMD ["sh","-c","alembic upgrade head && uvicorn ..."]` confirmed in `Dockerfile:40`; `curl /api/v1/health` → 200; `curl POST /api/v1/auth/register` → 201 with UUID body | PASS |
+| SC#5 | Image <500MB | `docker image ls mini-plataforma-analise-dados:local` → **386MB** | PASS |
+
+**Test output:** `10 passed in 2.48s` (`tests/api/test_auth.py`).
+
+### Phase boundary (guard against Phase 2-5 scope leak)
+
+`grep -rE '^(from|import) (pandas|duckdb|openai|altair|sqlglot|openpyxl|charset_normalizer)' app/` → empty. Phase 2-5 imports absent from `app/` code. Those libraries are only declared in `pyproject.toml` (to lock the final Docker image once), not yet in use.
+
+### Deviations in the follow-up wave (disclosed for audit)
+
+1. **Plans 01-04..08 were not drafted as formal PLAN.md files** (only 01-04 got a 413-line plan before the gsd-planner subagent hit a rate limit). Implementation was executed directly from this VERIFICATION.md gap block, which already listed exact file paths and missing artifacts. SUMMARY.md files were written for each plan after completion.
+2. **`app/db/models.py` bug fix from 01-03.** `User.id` had type `Mapped[uuid.UUID]` with a `String(36)` column — aiosqlite cannot bind `uuid.UUID` instances, so INSERTs crashed. Changed to `Mapped[str]` + `default=lambda: str(uuid.uuid4())`. Alembic migration is unchanged (column is still `String(36)`); no migration revision needed.
+3. **Dockerfile dropped BuildKit-only features** (`# syntax=` + `--mount=type=cache`) because the user's Docker CLI did not have buildx available at build time. Cost: cold uv cache on rebuilds. Reinstatable in environments with buildx.
+
+### Final verdict
+
+**Phase 1 — PASSED.** 5/5 ROADMAP success criteria met; 7/7 plan must-haves hold; no forbidden dependencies; phase boundary clean. Ready for Phase 2 (Ingestion) planning.
+
+### Phase 2 handoff notes
+
+- Auth perimeter is live at `/api/v1/auth/*` with `CurrentUser` type alias in `app/api/deps.py` — all Phase 2 endpoints that need identity should `Depends(get_current_user)` via that alias.
+- `get_db_session()` is re-exported in `app/api/deps.py`; use `DbSession` alias for consistency.
+- Task registry baseline (in-memory) mentioned in CONTEXT.md D-05 was NOT implemented in Phase 1 — it was always intended to be added in Phase 2 when upload jobs first need async tracking. Flag for Phase 2 planner.
+- `JWT_SECRET_KEY` unset triggers an ephemeral key + `jwt.ephemeral_key_generated` warning; fine for dev, must be set in any shared env.
+
+_Re-verified: 2026-04-25T01:55:00Z_
+_Re-verifier: Claude (main session, direct evidence collection after API-overloaded subagent)_
