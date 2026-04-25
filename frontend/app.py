@@ -397,15 +397,23 @@ else:
                 if lq.get("reasoning"):
                     st.caption(f"Raciocínio do modelo: {lq['reasoning']}")
 
-    # Chat input — Streamlit pins it to the bottom of the page.
+    pass
+
+
+# --- Top-level chat input ---
+# Streamlit 1.56 requires `st.chat_input` to be at the script's TOP LEVEL
+# (not inside conditional branches). We render it after the main UI blocks
+# and gate it on `session_id` so it appears only once a dataset is loaded.
+if st.session_state.get("session_id") is not None:
     question = st.chat_input("Pergunte algo sobre os dados...")
     if question:
-        # Render the user message immediately, then call the API, then re-render.
         st.session_state.messages.append({"role": "user", "content": question})
         with st.chat_message("user"):
             st.write(question)
         with st.chat_message("assistant"):
-            with st.spinner("Analisando (classificando → gerando SQL → executando → narrando)..."):
+            with st.spinner(
+                "Analisando (classificando → gerando SQL → executando → narrando)..."
+            ):
                 with api() as c:
                     r = c.post(
                         f"/sessions/{st.session_state.session_id}/query",
