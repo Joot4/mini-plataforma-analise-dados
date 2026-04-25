@@ -36,6 +36,9 @@ dev = [
     "ruff",
     "mypy",
 ]
+ui = [
+    "streamlit>=1.40",
+]
 
 [tool.ruff]
 line-length = 100

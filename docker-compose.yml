@@ -23,6 +23,22 @@ services:
       start_period: 5s
     restart: unless-stopped
 
+  ui:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    image: mini-plataforma-analise-dados-ui:local
+    container_name: mpad-ui
+    profiles: ["ui"]
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      MPAD_API: http://api:8000/api/v1
+    ports:
+      - "8501:8501"
+    restart: unless-stopped
+
 volumes:
   db-data:
   uploads-data:
