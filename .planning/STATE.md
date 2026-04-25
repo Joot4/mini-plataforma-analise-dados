@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 01-02-core-settings-PLAN.md
-last_updated: "2026-04-25T00:28:19Z"
-last_activity: 2026-04-25 — Completed 01-02 (Settings, security, structlog).
+stopped_at: Completed 01-03-db-alembic-PLAN.md
+last_updated: "2026-04-25T01:15:00Z"
+last_activity: 2026-04-25 — Completed 01-03 (User model, async session, alembic stack with reversible 0001 migration). Phase 1 implementation complete.
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 3
-  completed_plans: 2
-  percent: 67
+  completed_plans: 3
+  percent: 100
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-24)
 ## Current Position
 
 Phase: 1 of 6 (Foundation)
-Plan: 2 of 3 in current phase
-Status: In progress (Phase 1 wave 2)
-Last activity: 2026-04-25 — Completed 01-02 (Settings via pydantic-settings, pwdlib+PyJWT helpers, structlog JSON logging).
+Plan: 3 of 3 in current phase
+Status: Phase 1 plans complete — ready for Phase 1 verification (or roll into Phase 2 planning if no extra plans inserted)
+Last activity: 2026-04-25 — Completed 01-03 (User model + async session + alembic). All Phase 1 plans done.
 
-Progress: [███████░░░] 67%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -54,6 +54,7 @@ Progress: [███████░░░] 67%
 *Updated after each plan completion*
 | Phase 01 P01 | 6min | 2 tasks | 8 files |
 | Phase 01 P02 | 5min | 3 tasks | 5 files |
+| Phase 01 P03 | 8min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,9 @@ Recent decisions affecting current work:
 - Foundation: aiosqlite + pydantic-settings added to pyproject.toml as Rule 2 deviations (plan rationale named them but the explicit dep list omitted them; required for D-06 Settings and async SQLite).
 - Foundation (01-02): JWT secret resolution caches at module level in security.py with `_reset_secret()` test hook — prevents ephemeral key rotation between encode/decode if `get_settings.cache_clear()` runs mid-test. Stable warning event name `jwt.ephemeral_key_generated` is the contract for test assertions.
 - Foundation (01-02): Task 3 (logging) committed before Task 2 (security) because security.py imports get_logger; reordering keeps every commit importable. Logical plan order is preserved in SUMMARY symbol listing — only commit timeline swapped.
+- Foundation (01-03): UUID4 PK stored as String(36) on SQLite per PITFALLS.md#11. Future Postgres swap is a one-line column type change (PG_UUID(as_uuid=True)).
+- Foundation (01-03): alembic env.py reads DATABASE_URL via get_settings() (never hardcoded) and uses async_engine_from_config + connection.run_sync(do_run_migrations). render_as_batch=True set so future SQLite ALTERs work without revisiting env.py.
+- Foundation (01-03): 0001_create_users migration is hand-written (not --autogenerate) — auditable in 41 lines, won't churn between alembic releases. Round-trip (upgrade → downgrade → upgrade) verified clean against fresh SQLite file.
 
 ### Pending Todos
 
@@ -90,6 +94,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-25T00:28:19Z
-Stopped at: Completed 01-02-core-settings-PLAN.md
+Last session: 2026-04-25T01:15:00Z
+Stopped at: Completed 01-03-db-alembic-PLAN.md (Phase 1 implementation done)
 Resume file: None

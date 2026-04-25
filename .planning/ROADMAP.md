@@ -12,7 +12,7 @@ Six phases build the system layer by layer, each independently testable. Phase 1
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - Project skeleton, Docker infra, auth (register/login/JWT), SQLite migrations, task registry baseline
+- [x] **Phase 1: Foundation** - Project skeleton, Docker infra, auth (register/login/JWT), SQLite migrations, task registry baseline (3/3 plans done; verification pending)
 - [ ] **Phase 2: Ingestion & PT-BR Locale** - Upload endpoint + polling, CSV/XLSX/TSV parsing with full PT-BR locale handling, cleaning pipeline with report
 - [ ] **Phase 3: DuckDB Session & Security** - Per-session isolated DuckDB connections, two-layer SQL security hardening, session TTL sweeper
 - [ ] **Phase 4: Structured Summary** - Per-column stats via DuckDB, PT-BR LLM narration, structured logging for every LLM call
@@ -31,7 +31,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User A's JWT cannot be used to access resources belonging to User B (cross-user isolation enforced at the dependency layer).
   4. `docker compose up` starts the API in under 10 seconds; SQLite migrations run automatically on startup with no manual step required.
   5. The final Docker image size is under 500MB (`docker image ls` shows ≤500MB for the app image).
-**Plans**: 01-01 pyproject + uv [done], 01-02 core settings, 01-03 db + alembic
+**Plans**: 01-01 pyproject + uv [done], 01-02 core settings [done], 01-03 db + alembic [done]
 
 ### Phase 2: Ingestion & PT-BR Locale
 **Goal**: A user can upload any supported file format and receive a task_id immediately, with the background pipeline correctly parsing PT-BR data and returning a complete cleaning report via polling.
@@ -98,7 +98,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 1/3 | In progress | - |
+| 1. Foundation | 3/3 | Plans done — verification pending | 2026-04-25 |
 | 2. Ingestion & PT-BR Locale | 0/TBD | Not started | - |
 | 3. DuckDB Session & Security | 0/TBD | Not started | - |
 | 4. Structured Summary | 0/TBD | Not started | - |
