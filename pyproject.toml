@@ -38,6 +38,11 @@ dev = [
 ]
 ui = [
     "streamlit>=1.40",
+    # The frontend uses httpx (API calls) and pandas (DataFrame rendering).
+    # Listed here too because the UI Docker image uses `--only-group ui`,
+    # which skips [project.dependencies] to keep the image slim.
+    "httpx>=0.28",
+    "pandas>=3.0",
 ]
 
 [tool.ruff]

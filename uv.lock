@@ -631,6 +631,8 @@ dev = [
     { name = "ruff" },
 ]
 ui = [
+    { name = "httpx" },
+    { name = "pandas" },
     { name = "streamlit" },
 ]
 
@@ -667,7 +669,11 @@ dev = [
     { name = "respx", specifier = ">=0.23" },
     { name = "ruff" },
 ]
-ui = [{ name = "streamlit", specifier = ">=1.40" }]
+ui = [
+    { name = "httpx", specifier = ">=0.28" },
+    { name = "pandas", specifier = ">=3.0" },
+    { name = "streamlit", specifier = ">=1.40" },
+]
 
 [[package]]
 name = "mypy"
