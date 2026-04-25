@@ -31,7 +31,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User A's JWT cannot be used to access resources belonging to User B (cross-user isolation enforced at the dependency layer).
   4. `docker compose up` starts the API in under 10 seconds; SQLite migrations run automatically on startup with no manual step required.
   5. The final Docker image size is under 500MB (`docker image ls` shows ≤500MB for the app image).
-**Plans**: TBD
+**Plans**: 01-01 pyproject + uv [done], 01-02 core settings, 01-03 db + alembic
 
 ### Phase 2: Ingestion & PT-BR Locale
 **Goal**: A user can upload any supported file format and receive a task_id immediately, with the background pipeline correctly parsing PT-BR data and returning a complete cleaning report via polling.
@@ -98,7 +98,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/TBD | Not started | - |
+| 1. Foundation | 1/3 | In progress | - |
 | 2. Ingestion & PT-BR Locale | 0/TBD | Not started | - |
 | 3. DuckDB Session & Security | 0/TBD | Not started | - |
 | 4. Structured Summary | 0/TBD | Not started | - |

@@ -76,9 +76,12 @@ Requisitos para a entrega inicial. Cada um mapeia para uma fase do roadmap.
 - [ ] **OPS-01**: Background task usa `BackgroundTasks` do FastAPI + registry em memória (`dict[task_id → TaskStatus]`); endpoint `GET /tasks/{task_id}` retorna status `pending | running | done | error` + progresso + resultado quando pronto
 - [ ] **OPS-02**: Arquivo uploadado é persistido em volume Docker `/data/uploads/{user_id}/{task_id}` durante o processamento; deletado ao fim da TTL da sessão
 - [ ] **OPS-03**: Log estruturado (JSON, stdout) de cada chamada LLM: `{provider, model, tokens_in, tokens_out, cost_estimated, latency_ms, session_id}`
-- [ ] **OPS-04**: Docker Compose local com volume pra `/data` e `/db` (SQLite); sobe com `docker compose up` em <10s
-- [ ] **OPS-05**: Dockerfile multi-stage usando imagem `python:3.12-slim` + `uv` — imagem final < 500MB
-- [ ] **OPS-06**: Migrations SQLite (users, sessions) via alembic, rodam no startup
+- [x] **OPS-04
+**: Docker Compose local com volume pra `/data` e `/db` (SQLite); sobe com `docker compose up` em <10s
+- [x] **OPS-05
+**: Dockerfile multi-stage usando imagem `python:3.12-slim` + `uv` — imagem final < 500MB
+- [x] **OPS-06
+**: Migrations SQLite (users, sessions) via alembic, rodam no startup
 
 ### Performance
 
@@ -183,9 +186,9 @@ Mapa de qual fase cobre qual requisito. Populado durante a criação do roadmap.
 | OPS-01 | Phase 2 | Pending |
 | OPS-02 | Phase 2 | Pending |
 | OPS-03 | Phase 4 | Pending |
-| OPS-04 | Phase 1 | Pending |
-| OPS-05 | Phase 1 | Pending |
-| OPS-06 | Phase 1 | Pending |
+| OPS-04 | Phase 1 | Done (01-01) |
+| OPS-05 | Phase 1 | Done (01-01) |
+| OPS-06 | Phase 1 | Done (01-01) |
 | PERF-01 | Phase 6 | Pending |
 | PERF-02 | Phase 6 | Pending |
 
