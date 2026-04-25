@@ -29,6 +29,7 @@ from app.ingestion.reader import (
 )
 from app.ingestion.service import ingest_file
 from app.schemas.upload import TaskStatusResponse, UploadAcceptedResponse
+from app.sessions.store import get_session_store
 from app.tasks.registry import TaskStatus, get_task_registry
 
 router = APIRouter(prefix="/upload", tags=["upload"])
@@ -81,7 +82,9 @@ async def _stream_to_disk(
     return total
 
 
-def _run_ingest_job(task_id: str, file_path: Path, max_rows: int) -> None:
+def _run_ingest_job(
+    task_id: str, user_id: str, file_path: Path, max_rows: int
+) -> None:
     """Executed inside a thread pool by BackgroundTasks → loop.run_in_executor."""
     registry = get_task_registry()
     registry.update(task_id, status=TaskStatus.RUNNING, progress=0.1)
@@ -95,11 +98,16 @@ def _run_ingest_job(task_id: str, file_path: Path, max_rows: int) -> None:
                 error=_TOO_MANY_ROWS,
             )
             return
+        # Materialize into an isolated DuckDB session.
+        store = get_session_store()
+        session = store.create(user_id=user_id, df=result.df, schema=result.schema)
+        response = result.to_response()
+        response["session_id"] = session.session_id
         registry.update(
             task_id,
             status=TaskStatus.DONE,
             progress=1.0,
-            result=result.to_response(),
+            result=response,
         )
         file_path.unlink(missing_ok=True)
     except (UnsupportedFormatError, SingleColumnError, EmptyFileError) as exc:
@@ -122,9 +130,13 @@ def _run_ingest_job(task_id: str, file_path: Path, max_rows: int) -> None:
         )
 
 
-async def _run_ingest_async(task_id: str, file_path: Path, max_rows: int) -> None:
+async def _run_ingest_async(
+    task_id: str, user_id: str, file_path: Path, max_rows: int
+) -> None:
     loop = asyncio.get_running_loop()
-    await loop.run_in_executor(None, _run_ingest_job, task_id, file_path, max_rows)
+    await loop.run_in_executor(
+        None, _run_ingest_job, task_id, user_id, file_path, max_rows
+    )
 
 
 @router.post(
@@ -160,7 +172,11 @@ async def upload_file(
     )
 
     background.add_task(
-        _run_ingest_async, task.task_id, destination, settings.MAX_UPLOAD_ROWS
+        _run_ingest_async,
+        task.task_id,
+        str(current_user.id),
+        destination,
+        settings.MAX_UPLOAD_ROWS,
     )
 
     return UploadAcceptedResponse(task_id=task.task_id)

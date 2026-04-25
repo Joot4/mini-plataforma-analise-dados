@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
@@ -10,10 +11,13 @@ from fastapi.responses import JSONResponse
 
 from app.api.v1 import auth as auth_router
 from app.api.v1 import health as health_router
+from app.api.v1 import sessions as sessions_router
 from app.api.v1 import upload as upload_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging, get_logger
 from app.schemas.errors import ErrorDetails, ErrorResponse, FieldError
+from app.sessions.store import get_session_store
+from app.sessions.sweeper import DEFAULT_INTERVAL_SECONDS, run_sweeper
 
 
 @asynccontextmanager
@@ -22,8 +26,21 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     configure_logging(level=settings.LOG_LEVEL, debug=settings.DEBUG)
     logger = get_logger("app.lifespan")
     logger.info("app.startup", debug=settings.DEBUG, log_level=settings.LOG_LEVEL)
-    yield
-    logger.info("app.shutdown")
+
+    # Background sweeper for expired sessions (AUTH-06).
+    sweeper_task = asyncio.create_task(
+        run_sweeper(get_session_store(), interval_seconds=DEFAULT_INTERVAL_SECONDS)
+    )
+    try:
+        yield
+    finally:
+        sweeper_task.cancel()
+        try:
+            await sweeper_task
+        except asyncio.CancelledError:
+            pass
+        get_session_store().clear()
+        logger.info("app.shutdown")
 
 
 def _envelope(error_type: str, message: str, details: ErrorDetails | None = None) -> dict[str, Any]:
@@ -93,6 +110,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router.router, prefix="/api/v1")
     app.include_router(auth_router.router, prefix="/api/v1")
     app.include_router(upload_router.router, prefix="/api/v1")
+    app.include_router(sessions_router.router, prefix="/api/v1")
 
     return app
 
