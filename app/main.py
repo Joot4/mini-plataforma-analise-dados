@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 
 from app.api.v1 import auth as auth_router
 from app.api.v1 import health as health_router
+from app.api.v1 import upload as upload_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging, get_logger
 from app.schemas.errors import ErrorDetails, ErrorResponse, FieldError
@@ -91,6 +92,7 @@ def create_app() -> FastAPI:
 
     app.include_router(health_router.router, prefix="/api/v1")
     app.include_router(auth_router.router, prefix="/api/v1")
+    app.include_router(upload_router.router, prefix="/api/v1")
 
     return app
 
