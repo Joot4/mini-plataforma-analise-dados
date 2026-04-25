@@ -6,6 +6,7 @@ import time
 import pytest
 from httpx import AsyncClient
 
+from app.schemas.summary import NarrationResponse
 from tests.fixtures.ptbr_data import (
     huge_row_count_csv,
     ptbr_csv_cp1252_semicolon,
@@ -222,3 +223,73 @@ async def test_user_b_cannot_see_user_a_task(client: AsyncClient) -> None:
     )
     assert resp_b.status_code == 404
     assert resp_b.json()["error_type"] == "task_not_found"
+
+
+# --- Phase 4: summary in task result ---
+
+
+@pytest.mark.asyncio
+async def test_summary_included_without_api_key(client: AsyncClient) -> None:
+    """Without OPENAI_API_KEY, summary still carries stats — only narration is skipped."""
+    token = await _register_and_login(client, email="nosummary@example.com")
+    r = await client.post(
+        f"{API}/upload",
+        files={"file": ("vendas.csv", ptbr_csv_cp1252_semicolon(), "text/csv")},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    body = await _wait_for_status(client, r.json()["task_id"], token, "done")
+    summary = body["result"]["summary"]
+    assert summary["rows"] > 0
+    assert summary["cols"] > 0
+    assert isinstance(summary["columns"], list) and len(summary["columns"]) > 0
+    assert summary["narration"] is None
+    assert "OPENAI_API_KEY" in (summary["narration_error"] or "")
+
+
+@pytest.mark.asyncio
+async def test_summary_includes_narration_when_api_key_set(
+    client: AsyncClient, monkeypatch
+) -> None:
+    async def fake_narrate(stats, session_id=None):
+        return (
+            "O dataset contém diversas linhas com colunas de preço e região. "
+            "Destaca-se o Sudeste como valor mais frequente na coluna regional."
+        )
+
+    monkeypatch.setattr("app.api.v1.upload.generate_narration", fake_narrate)
+    monkeypatch.setenv("OPENAI_API_KEY", "test-fake-key-123")
+    # Settings is cached; fixtures already call cache_clear() per test.
+
+    token = await _register_and_login(client, email="narr@example.com")
+    r = await client.post(
+        f"{API}/upload",
+        files={"file": ("vendas.csv", ptbr_csv_cp1252_semicolon(), "text/csv")},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    body = await _wait_for_status(client, r.json()["task_id"], token, "done")
+    summary = body["result"]["summary"]
+    assert summary["narration"] is not None
+    assert "Sudeste" in summary["narration"]
+    assert summary["narration_error"] is None
+
+
+@pytest.mark.asyncio
+async def test_summary_columns_have_expected_shape(client: AsyncClient) -> None:
+    token = await _register_and_login(client, email="cols@example.com")
+    r = await client.post(
+        f"{API}/upload",
+        files={"file": ("vendas.csv", ptbr_csv_cp1252_semicolon(), "text/csv")},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    body = await _wait_for_status(client, r.json()["task_id"], token, "done")
+    cols = body["result"]["summary"]["columns"]
+    by_alias = {c["alias"]: c for c in cols}
+    # Preço got converted to numeric in phase 2 → summary should show numeric stats.
+    preco_alias = next(a for a in by_alias if "preco" in a)
+    preco = by_alias[preco_alias]
+    assert preco["kind"] == "numeric"
+    for k in ("min", "max", "mean", "median"):
+        assert k in preco
+    # Região is categorical → top5 present.
+    assert by_alias["regiao"]["kind"] == "categorical"
+    assert isinstance(by_alias["regiao"]["top5"], list)
